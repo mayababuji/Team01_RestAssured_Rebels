@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "roles": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "passwordExpired": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "token",
+    "type",
+    "userId",
+    "email",
+    "roles",
+    "status",
+    "passwordExpired"
+  ]
+}
