@@ -12,7 +12,7 @@ import java.util.*;
 
 public class ExcelReader {
 
-	public static String filePath = "src/test/resources/Team01_RestAssured_Rebles_TestDataSheet.xlsx";
+	public static String filePath = "src/test/resources/Team01_RestAssured_Rebels_TestDataSheet.xlsx";
 
 	public static List<Map<String, String>> getAllSheetData(String sheetName) throws IOException {
 		List<Map<String, String>> listData = new ArrayList<>();
