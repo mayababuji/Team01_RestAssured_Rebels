@@ -1,0 +1,59 @@
+	
+OK
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "user": {
+    "userId": "string",
+    "userFirstName": "Jf Sgfjp WDEpVLcebDkVJsFOkmivedYgBXMJvqGmXPFODttpBxKckMbxwgUYdqvekUHLRzGttJkjMQqYMpQb",
+    "userLastName": "SNbAAxBfdMZrpyZfKhRwqJe",
+    "userMiddleName": "ibBhoqYWqjrHFTjie",
+    "userPhoneNumber": "+6 1545758748",
+    "userLocation": "Zk",
+    "userTimeZone": "string",
+    "userLinkedinUrl": "Vy\"T$xg'kL~qh8$na.ceJ8\"Ce>Xz%>B:DsDi~F@J%<dE\\9Z2'u[K\"kyikjo(30Q-ftWJf~/42gp\\L| www&linkedin$com>P<<wRE`t2$cjF`hY;axLO`9{_lL,1t%S*P3IYoJ7pKoW^^/q0h|-\",oJzIajWiv9iWU'T>*",
+    "userEduUg": "O)Uspg5oRYT7BeL6sQI>@g*jE6@0'6xuJdrx>DEc>\\RJDhGkuVF\"(\\xdd9(ksO2y0QL\\jweX(/Gvy1_1,3*_@a'(3t7S7KQ^rY",
+    "userEduPg": "L1fPeHkOO\"qRV5RcgVD\"KsLVGv(THGRa-RWfGDJ= -/7^u)%&",
+    "userComments": "string",
+    "userVisaStatus": "string",
+    "userLoginEmail": "cMxN8T@gmail.com"
+  },
+  "roles": [
+    {
+      "roleId": "string",
+      "userRoleStatus": "string"
+    }
+  ],
+  "programBatches": [
+    {
+      "programId": 0,
+      "programName": "string",
+      "batches": [
+        {
+          "batchId": 0,
+          "batchName": "string",
+          "userBatchStatus": "string"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "skillId": 0,
+      "skillName": "string",
+      "months": 0
+    }
+  ],
+  "documents": [
+    {
+      "userFileId": 0,
+      "userFileType": "string",
+      "userFilePath": "string"
+    }
+  ]
+}
