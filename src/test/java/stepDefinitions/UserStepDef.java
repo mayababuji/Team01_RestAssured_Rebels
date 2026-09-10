@@ -14,6 +14,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import specBuilder.RequestSpec;
 import utils.ExcelReader;
+import utils.TestDataGenerator;
 
 
 public class UserStepDef {
@@ -46,19 +47,32 @@ public class UserStepDef {
 	}
 	@When("Admin sends HTTPS Request and request Body for user1")
 	public void admin_sends_https_request_and_request_body_for_user1() {
-	   
+
+	    // 1. Resolve endpoint safely (handling case variations)
 	    String endpoint = testData.get("EndPoint") != null ? testData.get("EndPoint") : testData.get("Endpoint");
 
-	 
 	    if (endpoint == null) {
 	        throw new IllegalStateException("Endpoint key was not found in testData map or contains a null value.");
 	    }
 
 	    System.out.println("Executing POST Request to: " + ConfigReader.get("base.url") + endpoint);
 
+	    // 2. Fetch raw JSON body from Excel and replace dynamic placeholders
+	    String rawBody = testData.get("Body");
+	    if (rawBody != null && !rawBody.isEmpty()) {
+	        String processedBody = TestDataGenerator.replaceDynamicPlaceholders(rawBody);
+	        System.out.println("=== FINAL REQUEST PAYLOAD SENT TO API ===");
+	        System.out.println(processedBody);
+	        System.out.println("=========================================");
+	        request.body(processedBody);
+	    }
+
+	    // 3. Handle specific scenario flags (like text/plain testing)
 	    if (testData.get("ScenarioName") != null && testData.get("ScenarioName").contains("InvalidContentType")) {
 	        request.contentType("text/plain");
 	    }
+
+	    // 4. Send request
 	    response = request.when().post(endpoint);
 	}
 
