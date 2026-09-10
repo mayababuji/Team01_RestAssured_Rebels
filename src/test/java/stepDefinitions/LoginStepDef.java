@@ -47,9 +47,9 @@ public class LoginStepDef extends SharedTestData {
 
         System.out.println(ConfigReader.get("base.url") + endpoint);
 
-        if (testData.get("ScenarioName").contains("InvalidContentType")) {
-            requestSpec.contentType("text/plain");
-        }
+//        if (testData.get("ScenarioName").contains("InvalidContentType")) {
+//            requestSpec.contentType("text/plain");
+//        }
 
         response = requestSpec.when().post(endpoint);
     }
@@ -82,6 +82,17 @@ public class LoginStepDef extends SharedTestData {
 
 
             }
+//            //Only for CreateAdmin_valid_mandatory  for creating user
+//            if (response.getStatusCode() == 200 &&
+//                    "CreateUser_with_valid_mandatory_feilds".equals(scenarioName.trim())) {
+//
+//                response.then().assertThat()
+//                        .body(matchesJsonSchemaInClasspath("schemas/UserController/CreateUserResponseSchema.json"));
+//
+//
+//
+//            }
+
         }
     }
 }

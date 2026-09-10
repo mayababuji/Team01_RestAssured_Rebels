@@ -1,8 +1,10 @@
 package specBuilder;
 
+import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import configReader.ConfigReader;
 import utils.SharedTestData;
@@ -48,6 +50,12 @@ public class RequestSpec {
                 .addFilter(RequestLoggingFilter.logRequestTo(logStream))
                 .addFilter(ResponseLoggingFilter.logResponseTo(logStream));
     }
+
+    // Helper to send request for creating user
+    public static Response sendRequest(RequestSpecification spec, String method, String endpoint) {
+        return RestAssured.given(spec).when().request(method, endpoint).andReturn();
+    }
+
 
     private static void initializeLogStream() {
         if (logStream != null) return;

@@ -9,3 +9,4 @@ Feature: Validate User Login Module
     Examples:
       | ScenarioName                      |
       |Valid credential                   |
+

@@ -56,4 +56,21 @@ public class ExcelReader {
 
         return null;
     }
+
+    // Simple main to test Excel reading
+    public static void main(String[] args) {
+        try {
+//            List<Map<String, String>> data = getAllSheetData("Program");
+//            for (Map<String, String> row : data) {
+//                System.out.println(row);
+//            }
+
+            Map<String, String> scenario = readExcelData("User", "CreateUser_with_valid_mandatory_feilds");
+            //testData = ExcelReader.readExcelData("User", scenarioName);
+            System.out.println("Scenario name for user rrrrrr is : " + scenario.get("User"));
+            System.out.println("Scenario name for user scenarioName is : " + scenario.get("CreateUser_with_valid_mandatory_feilds"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

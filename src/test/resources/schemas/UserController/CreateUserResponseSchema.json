@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "user": {
+      "type": "object",
+      "properties": {
+        "userComments": { "type": ["string", "null"] },
+        "userEduPg": { "type": ["string", "null"] },
+        "userEduUg": { "type": ["string", "null"] },
+        "userFirstName": { "type": "string" },
+        "userId": { "type": "string" },
+        "userLastName": { "type": "string" },
+        "userLinkedinUrl": { "type": ["string", "null"] },
+        "userLocation": { "type": "string" },
+        "userMiddleName": { "type": ["string", "null"] },
+        "userPhoneNumber": { "type": "string" },
+        "userTimeZone": { "type": "string" },
+        "userVisaStatus": { "type": "string" },
+        "userLoginEmail": { "type": "string" }
+      },
+      "required": ["userId", "userFirstName", "userLastName", "userPhoneNumber", "userLocation", "userTimeZone", "userVisaStatus", "userLoginEmail"]
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "roleId": { "type": "string" },
+          "userRoleStatus": { "type": "string" }
+        },
+        "required": ["roleId", "userRoleStatus"]
+      }
+    }
+  },
+  "required": ["user", "roles"]
+}
