@@ -4,21 +4,33 @@ import java.util.Random;
 
 public class TestDataGenerator {
 
-    public static String replaceDynamicPlaceholders(String jsonBody) {
-        if (jsonBody == null || jsonBody.isEmpty()) {
-            return jsonBody;
-        }
+	private static final Random RANDOM = new Random();
 
-        // Clean, standard email format (lowercase, no special characters except @ and .)
-        String randomEmail = "pam" + System.currentTimeMillis() + "@gmail.com";
-        
-        // Valid 10-digit phone number with +91 country code
-        Random random = new Random();
-        long random10Digit = 6000000000L + (long)(random.nextDouble() * 3000000000L);
-        String randomPhone = "+91 " + random10Digit;
+	public static String replaceDynamicPlaceholders(String jsonBody) {
+		if (jsonBody == null || jsonBody.isEmpty()) {
+			return jsonBody;
+		}
 
-        return jsonBody
-                .replace("<random_email>", randomEmail)
-                .replace("<random_phone>", randomPhone);
-    }
+		String dynamicPhone = generateIndianPhoneNumber();
+		String dynamicEmail = generateEmail();
+
+		String processed = jsonBody.replace("<random_email>", dynamicEmail).replace("<random_phone>", dynamicPhone);
+
+		processed = processed.replaceAll("\"userPhoneNumber\"\\s*:\\s*\"[^\"]*\"",
+				"\"userPhoneNumber\": \"" + dynamicPhone + "\"");
+
+		processed = processed.replaceAll("\"userLoginEmail\"\\s*:\\s*\"[^\"]*\"",
+				"\"userLoginEmail\": \"" + dynamicEmail + "\"");
+
+		return processed.replaceAll("\"userEmail\"\\s*:\\s*\"[^\"]*\"\\s*,?", "");
+	}
+
+	public static String generateIndianPhoneNumber() {
+		long random10Digit = 6000000000L + (long) (RANDOM.nextDouble() * 3000000000L);
+		return "+91 " + random10Digit;
+	}
+
+	public static String generateEmail() {
+		return "pam" + System.currentTimeMillis() + "@gmail.com";
+	}
 }
