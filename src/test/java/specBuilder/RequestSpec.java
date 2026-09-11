@@ -78,4 +78,8 @@ public class RequestSpec {
         logStream.println("==================================================\n");
         logStream.flush();
     }
+
+    public static String getBaseUri() {
+        return ConfigReader.get("base.url");
+    }
 }

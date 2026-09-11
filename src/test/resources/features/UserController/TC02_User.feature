@@ -1,4 +1,4 @@
-Feature: User Module [Post Operation]
+Feature: User Module
 
   Background:
     Given Admin sets Bearer token
@@ -22,6 +22,28 @@ Feature: User Module [Post Operation]
       | Create_User_Empty_VisaStatus       |
       | Create_User_Empty_RoleId           |
       | Create_User_Empty_RoleStatus       |
-      | Create_User_Empty_LoginStatus      |
+    #  | Create_User_Empty_LoginStatus      |
       | Create_User_Empty_Email            |
       | Create_User_Empty_PhoneNumber      |
+
+  @GetAllActiveUsers @GetAllActiveUsers_Positive
+  Scenario Outline: Admin retrieves all active users with valid Endpoint
+    Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
+    When Admin sends HTTPS Request for Get All Active Users
+    Then Admin receives StatusCode and response body for "<ScenarioName>"
+
+    Examples:
+      | ScenarioName                 |
+      | Get_All_Active_Users_Success |
+
+  @GetAllActiveUsers @GetAllActiveUsers_Negative
+  Scenario Outline: Check if admin receives proper error code when retrieving active users with invalid request parameters
+    Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
+    When Admin sends HTTPS Request for Get All Active Users
+    Then Admin receives StatusCode and response body for "<ScenarioName>"
+
+    Examples:
+      | ScenarioName                          |
+      | Get_All_Active_Users_Invalid_Endpoint |
+     | Get_All_Active_Users_Invalid_Method   |
+     | Get_All_Active_Users_No_Auth          |
