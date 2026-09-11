@@ -46,7 +46,7 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         batchData.setProgramId(SharedTestData.programId);
 
-        //String batchName = SharedTestData.programName + "_01";
+
         String batchName = SharedTestData.programName + "_" + TestDataUtil.randomNumericSuffix(3);
         batchData.setBatchName(batchName);
         SharedTestData.batchName = batchName;
@@ -114,7 +114,7 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         response.then().log().all().statusCode(expectedStatus);
 
-        // Use your existing ResponseSpec helper to extract the message
+
         String message = specBuilder.ResponseSpec.getResponseMessage(response);
 
         if (message != null && !message.isBlank() && expectedMessage != null && !expectedMessage.isBlank()) {

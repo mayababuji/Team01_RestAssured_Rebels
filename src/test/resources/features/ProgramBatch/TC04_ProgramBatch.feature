@@ -23,3 +23,10 @@ Feature: Program Batch module for LMS API
     Examples:
       | scenario                             |
       | CreateBatch_Existing_Batch           |
+      | CreateBatch_Missing_Mandatory_Fields |
+
+  @NoAuth
+  Scenario: Check if Admin is able to create batch without authorization
+    Given Admin create POST request with invalid input for "CreateBatch_NoAuth" from excel sheet
+    When Admin sends POST request to create program batch
+    Then Admin receives expected status code with error message
