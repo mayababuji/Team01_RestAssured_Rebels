@@ -1,6 +1,5 @@
 package stepDefinitions;
 
-
 import configReader.ConfigReader;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -8,7 +7,6 @@ import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.testng.Assert;
-import specBuilder.RequestSpec;
 import specBuilder.ResponseSpec;
 import utils.ExcelReader;
 import utils.SharedTestData;
@@ -17,71 +15,129 @@ import java.io.IOException;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
-import static org.hamcrest.Matchers.lessThan;
 
 public class LoginStepDef extends SharedTestData {
-    private Map<String, String> testData;
-    private Response response;
+
     private RequestSpecification requestSpec;
-    @Given("Admin has the test data for {string} from Excel with No Auth")
-    public void admin_has_the_test_data_for_from_excel_with_no_auth(String scenarioName) throws IOException {
+    private Response response;
+    private Map<String, String> data;
+    private String ScenarioName;
 
-        testData = ExcelReader.readExcelData("Login", scenarioName);
-
-        String requestBody = testData.get("Body");
-
-        System.out.println(requestBody);
-
-        RequestSpec.logScenarioName(scenarioName);
-
+    @Given("Admin sets No Auth")
+    public void admin_sets_no_auth() {
         requestSpec = given()
-                .spec(RequestSpec.getRequestSpecWithoutAuth())
-                .body(requestBody);
+                .baseUri(ConfigReader.get("base.url"))
+                .header("Content-Type", "application/json");
     }
 
-    @When("Admin sends the post request for  Sign In")
-    public void admin_sends_the_post_request_for_sign_in() {
+    @Given("Admin prepares login request body for {string} from Excel")
+    public void admin_prepares_login_request_body(String scenarioName) throws IOException {
+        this.ScenarioName = scenarioName;
+        data = ExcelReader.readExcelData("Login", ScenarioName);
+        setRequestBody();
+        setSpecialRequestDetails();
+    }
 
-        String endpoint = testData.get("Endpoint");
+    @When("Admin sends {string} request to {string}")
+    public void admin_sends_request(String method, String endpoint) {
+        String actualEndpoint = getEndpoint(endpoint);
 
-        System.out.println(ConfigReader.get("base.url") + endpoint);
+        System.out.println("-----------------------------------");
+        System.out.println("Scenario : " + ScenarioName);
+        System.out.println("Method   : " + method);
+        System.out.println("Endpoint : " + actualEndpoint);
+        System.out.println("-----------------------------------");
 
-        if (testData.get("ScenarioName").contains("InvalidContentType")) {
+        if ("POST".equalsIgnoreCase(method)) {
+            response = requestSpec.when().log().all().post(actualEndpoint);
+        } else if ("GET".equalsIgnoreCase(method)) {
+            response = requestSpec.when().log().all().get(actualEndpoint);
+        } else {
+            Assert.fail("Unsupported HTTP method: " + method);
+        }
+
+        System.out.println("Actual Status Code: " + response.getStatusCode());
+    }
+
+    @Then("Admin validates login response with status code {string}")
+    public void admin_validates_login_response(String statusCode) {
+        Assert.assertNotNull(response, "Response is null");
+
+        int expectedStatusCode = Integer.parseInt(statusCode);
+        int actualStatusCode = response.getStatusCode();
+
+        System.out.println("-----------------------------------");
+        System.out.println("Scenario        : " + ScenarioName);
+        System.out.println("Expected Status : " + expectedStatusCode);
+        System.out.println("Actual Status   : " + actualStatusCode);
+        System.out.println("-----------------------------------");
+
+        Assert.assertEquals(actualStatusCode, expectedStatusCode, "Status code does not match");
+
+        validateResponseMessage();
+
+        if (expectedStatusCode == 200) {
+            response.then().assertThat()
+                    .body(io.restassured.module.jsv.JsonSchemaValidator
+                            .matchesJsonSchemaInClasspath("schemas/Login/UserSignInSchema.json"));
+
+            String capturedToken = response.jsonPath().getString("token");
+            Assert.assertNotNull(capturedToken, "Token was not generated");
+            token = capturedToken;
+            System.out.println("Token Captured and Stored in SharedTestData: " + token);
+        }
+    }
+
+    private void setRequestBody() {
+        String body = data.get("Body");
+
+        if ("Valid credential".equalsIgnoreCase(ScenarioName)) {
+            String email = ConfigReader.get("admin.email");
+            String password = ConfigReader.get("admin.password");
+            body = "{\"userLoginEmailId\":\"" + email + "\",\"password\":\"" + password + "\"}";
+        }
+
+        if (body != null && !body.isBlank()) {
+            requestSpec.body(body);
+        }
+    }
+
+    private void setSpecialRequestDetails() {
+        if ("Invalid content type".equalsIgnoreCase(ScenarioName)) {
             requestSpec.contentType("text/plain");
         }
-
-        response = requestSpec.when().post(endpoint);
-    }
-    @Then("Admin should receive the status code as  in Excel")
-    public void admin_should_receive_the_status_code_as_in_excel() {
-
-        int expectedStatusCode = Integer.parseInt(testData.get("ExpectedStatusCode"));
-        String scenarioName = testData.get("ScenarioName");
-
-        response.then().spec(ResponseSpec.status(expectedStatusCode));
-
-        String contentType = response.getHeader("Content-Type");
-
-        if (contentType != null && contentType.contains("application/json")) {
-
-            // Response time check (functional + performance mix)
-            response.then().time(lessThan(2000L));
-
-            // Only validate schema + token for valid login
-            if (response.getStatusCode() == 200 &&
-                    "Valid credential".equals(scenarioName.trim())) {
-
-                response.then().assertThat()
-                        .body(matchesJsonSchemaInClasspath("schemas/Login/UserSignInSchema.json"));
-
-                String capturedToken = response.jsonPath().getString("token");
-                if (capturedToken != null) {
-                    token = capturedToken;
-                }
-
-
-            }
+        if ("Invalid base URL".equalsIgnoreCase(ScenarioName)) {
+            requestSpec.baseUri(ConfigReader.get("login.invalidBaseUri"));
         }
+        if ("Without request body".equalsIgnoreCase(ScenarioName)) {
+            requestSpec.body("");
+        }
+    }
+
+    private String getEndpoint(String endpoint) {
+        if ("loginEndpoint".equalsIgnoreCase(endpoint)) {
+            return ConfigReader.get("login.endpoint");
+        }
+        if ("invalidEndpoint".equalsIgnoreCase(endpoint)) {
+            return ConfigReader.get("login.invalidEndpoint");
+        }
+        return endpoint;
+    }
+
+    private void validateResponseMessage() {
+        String expectedMessage = data.get("ExpectedMessage");
+        if (expectedMessage == null || expectedMessage.isBlank()) {
+            return;
+        }
+
+        String actualMessage = ResponseSpec.getResponseMessage(response);
+
+        System.out.println("Expected Message : " + expectedMessage);
+        System.out.println("Actual Message   : " + actualMessage);
+
+        Assert.assertTrue(
+                actualMessage != null && actualMessage.contains(expectedMessage),
+                "Expected message: " + expectedMessage + " but actual message: " + actualMessage
+        );
     }
 }
