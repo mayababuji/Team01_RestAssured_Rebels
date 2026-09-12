@@ -7,13 +7,14 @@ import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.testng.Assert;
-import specBuilder.RequestSpec;
 import specBuilder.ResponseSpec;
 import utils.ExcelReader;
 import utils.SharedTestData;
 
 import java.io.IOException;
 import java.util.Map;
+
+import static io.restassured.RestAssured.given;
 
 public class LoginStepDef extends SharedTestData {
 
@@ -24,19 +25,19 @@ public class LoginStepDef extends SharedTestData {
 
     @Given("Admin sets No Auth")
     public void admin_sets_no_auth() {
-        requestSpec = RequestSpec.getRequestSpecWithoutAuth();
+        requestSpec = given()
+                .baseUri(ConfigReader.get("base.url"))
+                .header("Content-Type", "application/json");
     }
-    // Login Request
+
     @Given("Admin prepares login request body for {string} from Excel")
     public void admin_prepares_login_request_body(String scenarioName) throws IOException {
         this.ScenarioName = scenarioName;
         data = ExcelReader.readExcelData("Login", ScenarioName);
-        requestSpec = RequestSpec.getRequestSpecWithoutAuth();
-        requestSpec.contentType("application/json");
         setRequestBody();
         setSpecialRequestDetails();
     }
-    // Send GET / POST Request
+
     @When("Admin sends {string} request to {string}")
     public void admin_sends_request(String method, String endpoint) {
         String actualEndpoint = getEndpoint(endpoint);
@@ -57,6 +58,7 @@ public class LoginStepDef extends SharedTestData {
 
         System.out.println("Actual Status Code: " + response.getStatusCode());
     }
+
     @Then("Admin validates login response with status code {string}")
     public void admin_validates_login_response(String statusCode) {
         Assert.assertNotNull(response, "Response is null");
@@ -74,7 +76,6 @@ public class LoginStepDef extends SharedTestData {
 
         validateResponseMessage();
 
-        // Capture token for successful login
         if (expectedStatusCode == 200) {
             response.then().assertThat()
                     .body(io.restassured.module.jsv.JsonSchemaValidator
@@ -85,24 +86,22 @@ public class LoginStepDef extends SharedTestData {
             token = capturedToken;
             System.out.println("Token Captured and Stored in SharedTestData: " + token);
         }
-
-        System.out.println("Result: PASSED\n");
     }
+
     private void setRequestBody() {
         String body = data.get("Body");
 
-        // Valid credential uses credentials from properties file
         if ("Valid credential".equalsIgnoreCase(ScenarioName)) {
             String email = ConfigReader.get("admin.email");
             String password = ConfigReader.get("admin.password");
             body = "{\"userLoginEmailId\":\"" + email + "\",\"password\":\"" + password + "\"}";
         }
 
-        // Send body only when Excel contains body data
         if (body != null && !body.isBlank()) {
             requestSpec.body(body);
         }
     }
+
     private void setSpecialRequestDetails() {
         if ("Invalid content type".equalsIgnoreCase(ScenarioName)) {
             requestSpec.contentType("text/plain");
@@ -114,7 +113,7 @@ public class LoginStepDef extends SharedTestData {
             requestSpec.body("");
         }
     }
-    // Get Actual Endpoint 
+
     private String getEndpoint(String endpoint) {
         if ("loginEndpoint".equalsIgnoreCase(endpoint)) {
             return ConfigReader.get("login.endpoint");
@@ -124,6 +123,7 @@ public class LoginStepDef extends SharedTestData {
         }
         return endpoint;
     }
+
     private void validateResponseMessage() {
         String expectedMessage = data.get("ExpectedMessage");
         if (expectedMessage == null || expectedMessage.isBlank()) {

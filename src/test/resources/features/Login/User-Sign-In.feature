@@ -10,7 +10,7 @@ Feature: User Sign In(Login Controller))
     Then Admin validates login response with status code "<StatusCode>"
 
     Examples:
-      | ScenarioName               | Method | Endpoint     | StatusCode |
+      | ScenarioName               | Method | Endpoint        | StatusCode |
       | Valid credential           | POST   | loginEndpoint   | 200        |
       | Invalid method             | GET    | loginEndpoint   | 405        |
       | Invalid base URL           | POST   | loginEndpoint   | 404        |
