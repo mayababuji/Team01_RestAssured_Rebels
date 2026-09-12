@@ -3,3 +3,9 @@ target/
 .settings/
 .classpath
 .project
+credentials-*.properties
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.iml
