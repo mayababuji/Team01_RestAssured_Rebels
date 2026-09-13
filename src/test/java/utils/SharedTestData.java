@@ -18,11 +18,12 @@ public class SharedTestData {
 
     // Auth token shared across tests
     public static String token;
+	public static String userId;
 
     public SharedTestData() {
 
-    }
 
+    }
 
 
 }

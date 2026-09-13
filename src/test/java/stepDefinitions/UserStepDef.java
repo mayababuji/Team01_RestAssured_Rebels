@@ -3,181 +3,185 @@ package stepDefinitions;
 import java.io.IOException;
 import java.util.Map;
 import org.testng.Assert;
+
+import httpRequest.UserRequestParser;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import pojo.CreateUserRequest;
 import specBuilder.RequestSpec;
+import specBuilder.ResponseSpec;
 import utils.ExcelReader;
 import utils.ScenarioContext;
 import utils.SharedTestData;
 import utils.TestDataUtil;
 
 public class UserStepDef {
-	private RequestSpecification request;
-	private Response response;
+    private RequestSpecification request;
+    private Response response;
+    private Map<String, String> testData;
+    private final ScenarioContext scenarioContext;
 
-	private ExcelReader excelReader = new ExcelReader();
-	private Map<String, String> testData;
-	private ScenarioContext scenarioContext;
-	  public UserStepDef(ScenarioContext scenarioContext) {
-	        this.scenarioContext = scenarioContext;
-	    }
+    public UserStepDef(ScenarioContext scenarioContext) {
+        this.scenarioContext = scenarioContext;
+    }
+    @Given("Admin sets Bearer token")
+    public void admin_sets_bearer_token() {
+    	 Boolean skipAuth = (Boolean) scenarioContext.getContext("SKIP_AUTH");
+         if (Boolean.TRUE.equals(skipAuth)) {
+             return; // do nothing, no auth header
+         }
 
-	
-		@Given("Admin sets Bearer token")
-		public void admin_sets_bearer_token() {
-            RequestSpecification spec = RequestSpec.getRequestSpec();
-            scenarioContext.setRequestSpec(spec);
+         RequestSpecification spec = RequestSpec.getRequestSpec();
+         scenarioContext.setRequestSpec(spec);
+     
+    }
 
-		}
+    @Given("Admin creates POST Request for the LMS API endpoint with data from Excel {string}")
+    public void admin_creates_post_request_for_the_lms_api_endpoint_with_data_from_excel(String scenarioName)
+            throws IOException {
 
+        RequestSpec.logScenarioName(scenarioName);
 
-		@Given("Admin creates POST Request for the LMS API endpoint with data from Excel {string}")
-		public void admin_creates_post_request_for_the_lms_api_endpoint_with_data_from_excel(String scenarioName)
-		        throws IOException {
+        // 1. Fetch test data from Excel FIRST
+        testData = ExcelReader.readExcelData("User", scenarioName);
+        
+        // Check both potential key names for body
+        String rawRequestBody = testData.get("Body") != null ? testData.get("Body") : testData.get("RequestBody");
 
-		    RequestSpec.logScenarioName(scenarioName);
+        if (rawRequestBody == null || rawRequestBody.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Request body for scenario '" + scenarioName + "' is null or empty in Excel.");
+        }
 
-		    testData = ExcelReader.readExcelData("User", scenarioName);
-		    String rawRequestBody = testData.get("Body");
+        // 2. Replace dynamic placeholders (email/phone)
+        String processedRequestBody = rawRequestBody
+                .replace("<random_email>", TestDataUtil.randomEmail())
+                .replace("<random_phone>", TestDataUtil.randomPhone());
 
-		    if (rawRequestBody == null || rawRequestBody.trim().isEmpty()) {
-		        throw new IllegalArgumentException(
-		                "Request body for scenario '" + scenarioName + "' is null or empty in Excel.");
-		    }
+        // 3. Configure Request Specification (Auth)
+        if (scenarioName.contains("No_Auth")) {
+            request = RestAssured.given().spec(RequestSpec.getRequestSpecWithoutAuth());
+        } else if (scenarioName.contains("Invalid_Token")) {
+            request = RestAssured.given().spec(RequestSpec.getRequestSpecWithCustomToken("invalid_token_12345"));
+        } else {
+            request = RestAssured.given().spec(RequestSpec.getRequestSpec());
+        }
 
-		    String processedRequestBody = rawRequestBody
-		            .replace("<random_email>", TestDataUtil.randomEmail())
-		            .replace("<random_phone>", TestDataUtil.randomPhone());
+        // 4. Handle Content Type & Body Serialization
+        if (scenarioName.contains("Invalid_Content_Type") || scenarioName.contains("InvalidContentType")) {
+            request.contentType("text/plain").body(processedRequestBody);
+        } else {
+            // Parse processed JSON string into POJO
+            CreateUserRequest userPayload = UserRequestParser.createUserParseData(processedRequestBody);
+            
+            // REST Assured auto-serializes POJO to JSON
+            request.contentType(ContentType.JSON).body(userPayload);
+        }
+    }
 
-		    String auth = testData.get("Auth");
-		    boolean isNoAuthScenario = scenarioName.toLowerCase().contains("no_auth") 
-		            || "No_Auth".equalsIgnoreCase(auth)
-		            || "None".equalsIgnoreCase(auth);
+    @When("Admin sends HTTPS Request and request Body for user")
+    public void admin_sends_https_request_and_request_body_for_user() {
 
-		   
-		    if (isNoAuthScenario) {
-		        request = RestAssured.given().spec(RequestSpec.getRequestSpecWithoutAuth());
-		    } else {
-		        if (SharedTestData.token == null || SharedTestData.token.trim().isEmpty()) {
-		            throw new IllegalStateException("SharedTestData.token is null.");
-		        }
-		        request = RestAssured.given().spec(RequestSpec.getRequestSpec());  
-		    }
+        String endpoint = testData.get("EndPoint") != null ? testData.get("EndPoint") : testData.get("Endpoint");
+        
+        // Read HTTP Method from Excel (e.g., GET, POST, PUT, DELETE)
+        String httpMethod = testData.getOrDefault("Method", "POST").trim().toUpperCase();
 
-		    
-		    String contentType = testData.get("ContentType");
-		    if (contentType != null && !contentType.trim().isEmpty()) {
-		        if (contentType.equalsIgnoreCase("Plain Text") || contentType.equalsIgnoreCase("text/plain")) {
-		            request.contentType("text/plain");
-		        } else {
-		            request.contentType(contentType);
-		        }
-		    } else {
-		        request.contentType("application/json"); // Fallback default
-		    }
+        if (endpoint == null) {
+            throw new IllegalStateException("Endpoint key was not found in testData map or contains a null value.");
+        }
 
-	
-		    request.body(processedRequestBody);
-		}
+        if (testData.get("ScenarioName") != null && testData.get("ScenarioName").contains("InvalidContentType")) {
+            request.contentType("text/plain");
+        }
 
-		@When("Admin sends HTTPS Request and request Body for user")
-		public void admin_sends_https_request_and_request_body_for_user1() {
+        switch (httpMethod) {
+            case "GET":
+                response = request.when().get(endpoint);
+                break;
+            default:
+                response = request.when().post(endpoint);
+                break;
+        }
+    }
 
-		    String endpoint = testData.get("EndPoint") != null ? testData.get("EndPoint") : testData.get("Endpoint");
+    @Then("Admin receives StatusCode and response body for {string}")
+    public void admin_receives_status_code_and_response_body_for(String scenario) {
 
-		    if (endpoint == null) {
-		        throw new IllegalStateException("Endpoint key was not found in testData map or contains a null value.");
-		    }
+        int expectedStatusCode = Integer.parseInt(testData.get("Response Code"));
 
-		    if (testData.get("ScenarioName") != null && testData.get("ScenarioName").contains("InvalidContentType")) {
-		        request.contentType("text/plain");
-		    }
+        // Validate status code
+        response.then().spec(ResponseSpec.status(expectedStatusCode));
 
-		    String method = testData.get("Method");
-		    if (method == null || method.trim().isEmpty()) {
-		        method = "POST";
-		    }
+        // Get message and fallback to full body if null
+        String responseMessage = ResponseSpec.getResponseMessage(response);
+        if (responseMessage == null || responseMessage.equals("null")) {
+            responseMessage = response.getBody().asString();
+        }
 
-		    switch (method.toUpperCase()) {
-		        case "GET":
-		            response = request.when().get(endpoint);
-		            break;
-		        case "PUT":
-		            response = request.when().put(endpoint);
-		            break;
-		        case "DELETE":
-		            response = request.when().delete(endpoint);
-		            break;
-		        default:
-		            response = request.when().post(endpoint);
-		            break;
-		    }
-		}
+        System.out.println("Status: " + response.getStatusCode() + " | Message/Response: " + responseMessage);
 
-	@Then("Admin receives StatusCode and response body for {string}")
-	public void admin_receives_status_code_and_response_body_for(String scenario) {
+        // Extract user ID on 201
+        if (response.getStatusCode() == 201) {
+            String generatedUserId = response.jsonPath().getString("userId");
+            if (generatedUserId != null) {
+                SharedTestData.userId = generatedUserId;
+            }
+        }
+ 
+ 
+    }
+    @Given("Admin creates GET Request for the LMS API endpoint with data from Excel {string}")
+    public void admin_creates_get_request_for_the_lms_api_endpoint_with_data_from_excel(String scenarioName)
+            throws IOException {
+        
+        RequestSpec.logScenarioName(scenarioName);
+        testData = ExcelReader.readExcelData("User", scenarioName);
 
-		int expectedStatusCode = Integer.parseInt(testData.get("Response Code"));
-		int actualStatusCode = response.getStatusCode();
+        String auth = testData.get("Auth");
+        boolean isNoAuthScenario = scenarioName.toLowerCase().contains("no_auth") 
+                || "No_Auth".equalsIgnoreCase(auth)
+                || "None".equalsIgnoreCase(auth);
 
-		System.out.println("Status: " + actualStatusCode + " | Response: " + response.getBody().asString());
+        if (isNoAuthScenario) {
+            request = RestAssured.given().spec(RequestSpec.getRequestSpecWithoutAuth());
+        } else {
+            if (SharedTestData.token == null || SharedTestData.token.trim().isEmpty()) {
+                throw new IllegalStateException("SharedTestData.token is null.");
+            }
+            request = RestAssured.given().spec(RequestSpec.getRequestSpec());
+        }
+    }
 
-		Assert.assertEquals(actualStatusCode, expectedStatusCode, "Status Code Mismatch!");
+    @When("Admin sends HTTPS Request for Get All Active Users")
+    public void admin_sends_https_request_for_get_all_active_users() {
 
-		Assert.assertEquals(actualStatusCode, expectedStatusCode, "Status Code Mismatch for scenario: " + scenario);
+        String endpoint = testData.get("EndPoint") != null ? testData.get("EndPoint") : testData.get("Endpoint");
+        String method = testData.getOrDefault("Method", "GET");
 
-	}
+        if (endpoint == null) {
+            throw new IllegalStateException("Endpoint key was not found.");
+        }
 
-	@Given("Admin creates GET Request for the LMS API endpoint with data from Excel {string}")
-	public void admin_creates_get_request_for_the_lms_api_endpoint_with_data_from_excel(String scenarioName)
-			throws IOException {
-		RequestSpec.logScenarioName(scenarioName);
-		testData = ExcelReader.readExcelData("User", scenarioName);
-
-		String auth = testData.get("Auth");
-		boolean isNoAuthScenario = scenarioName.toLowerCase().contains("no_auth") || "No_Auth".equalsIgnoreCase(auth)
-				|| "None".equalsIgnoreCase(auth);
-
-		if (isNoAuthScenario) {
-		
-			request = RestAssured.given().spec(RequestSpec.getRequestSpecWithoutAuth());
-		} else {
-		
-			if (SharedTestData.token == null || SharedTestData.token.trim().isEmpty()) {
-				throw new IllegalStateException(
-						"SharedTestData.token is null.");
-			}
-			request = RestAssured.given().spec(RequestSpec.getRequestSpec());
-		}
-	}
-
-	@When("Admin sends HTTPS Request for Get All Active Users")
-	public void admin_sends_https_request_for_get_all_active_users() {
-
-		String endpoint = testData.get("EndPoint") != null ? testData.get("EndPoint") : testData.get("Endpoint");
-		String method = testData.getOrDefault("Method", "GET");
-		if (endpoint == null) {
-			throw new IllegalStateException("Endpoint key was not found.");
-		}
-
-		switch (method.toUpperCase()) {
-		case "POST":
-			response = request.when().post(endpoint);
-			break;
-		case "PUT":
-			response = request.when().put(endpoint);
-			break;
-		case "DELETE":
-			response = request.when().delete(endpoint);
-			break;
-		default:
-			response = request.when().get(endpoint);
-
-		}
-	}
-
+        switch (method.toUpperCase()) {
+            case "POST":
+                response = request.when().post(endpoint);
+                break;
+            case "PUT":
+                response = request.when().put(endpoint);
+                break;
+            case "DELETE":
+                response = request.when().delete(endpoint);
+                break;
+            default:
+                response = request.when().get(endpoint);
+                break;
+        }
+    }
 }
