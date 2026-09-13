@@ -21,10 +21,8 @@ public class ExcelReader {
 
 			Sheet sheet = null;
 
-			// 1. Try exact match
 			sheet = workbook.getSheet(sheetName);
 
-			// 2. Fallback: Search case-insensitively and trim spaces
 			if (sheet == null) {
 				for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
 					Sheet s = workbook.getSheetAt(i);
@@ -35,7 +33,6 @@ public class ExcelReader {
 				}
 			}
 
-			// 3. Throw a helpful error if still not found
 			if (sheet == null) {
 				List<String> availableSheets = new ArrayList<>();
 				for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
