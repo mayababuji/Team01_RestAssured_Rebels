@@ -69,7 +69,7 @@ Scenario Outline: Get user count with invalid Role ID
       | Get_Active_Inactive_User_Count_Invalid_RoleID |
 
   @GetUserCount_Negative
-  Scenario Outline: Check if Admin is unable to retrieve user count with invalid endpoint 
+  Scenario Outline: Check if Admin is unable to retrieve user count with invalid endpoint
    Given Admin creates GET request with invalid endpoint for user count scenario "<scenario>" from excel sheet
     When Admin sends GET request to retrieve active and inactive user count
     Then Admin receives expected status code for invalid endpoint for user count
