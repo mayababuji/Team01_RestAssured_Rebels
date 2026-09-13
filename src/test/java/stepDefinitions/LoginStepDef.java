@@ -95,9 +95,12 @@ public class LoginStepDef extends SharedTestData {
             String email = ConfigReader.get("admin.email");
             String password = ConfigReader.get("admin.password");
             body = "{\"userLoginEmailId\":\"" + email + "\",\"password\":\"" + password + "\"}";
+            System.out.println("Bodyyyyyy: " + body);
+
         }
 
         if (body != null && !body.isBlank()) {
+
             requestSpec.body(body);
         }
     }

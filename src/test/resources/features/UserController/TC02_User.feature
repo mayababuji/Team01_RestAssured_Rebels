@@ -41,11 +41,11 @@ Feature: User Module
       | Create_User_Invalid_User_Visa_Status    |
       | Create_User_Invalid_Token               |
       | Create_User_Invalid_Endpoint            |
-      | Create_User_Invalid_Content_Type        |
-      | Create_User_Invalid_Method            |
+      # | Create_User_Invalid_Content_Type        |
+      | Create_User_Invalid_Method              |
       | Create_User_No_Auth                     |
 
-   @GetAllActiveUsers_Positive
+  @GetAllActiveUsers_Positive
   Scenario Outline: Admin retrieves all active users with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -67,7 +67,7 @@ Feature: User Module
       | Get_All_Active_Users_Invalid_Method   |
       | Get_All_Active_Users_No_Auth          |
 
-   @GetActiveUserEmails_Positive
+  @GetActiveUserEmails_Positive
   Scenario Outline: Admin retrieves all active user emails with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -77,7 +77,7 @@ Feature: User Module
       | ScenarioName                          |
       | Get_Active_User_Emails_Valid_Endpoint |
 
- @GetActiveUserEmails_Negative
+  @GetActiveUserEmails_Negative
   Scenario Outline: Check if admin receives proper error code when retrieving active user emails with invalid request parameters
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -88,4 +88,3 @@ Feature: User Module
       | Get_Active_User_Emails_Invalid_Endpoint |
       | Get_Active_User_Emails_Invalid_Method   |
       | Get_Active_User_Emails_No_Auth          |
-

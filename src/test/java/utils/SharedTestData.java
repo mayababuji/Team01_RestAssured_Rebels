@@ -2,11 +2,11 @@ package utils;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import configReader.ConfigReader;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import specBuilder.RequestSpec;
+
 
 public class SharedTestData {
 

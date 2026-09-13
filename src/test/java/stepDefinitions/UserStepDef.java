@@ -21,6 +21,7 @@ public class UserStepDef {
 	private ExcelReader excelReader = new ExcelReader();
 	private Map<String, String> testData;
 
+
 	@Given("Admin sets Bearer token")
 	public void admin_sets_bearer_token() {
 		SharedTestData.generateAndSetToken();
