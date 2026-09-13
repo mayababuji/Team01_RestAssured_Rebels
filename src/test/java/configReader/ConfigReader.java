@@ -62,6 +62,12 @@ public class ConfigReader {
             if (input3 != null) {
                 properties.load(input3);
             }
+            System.out.println("===== CONFIG CHECK =====");
+System.out.println("env = " + System.getProperty("env"));
+System.out.println("admin.email = " + properties.getProperty("admin.email"));
+System.out.println("admin.password = " +
+        (properties.getProperty("admin.password") != null ? "SET" : "NULL"));
+System.out.println("========================");
 
         } catch (Exception e) {
             e.printStackTrace();
