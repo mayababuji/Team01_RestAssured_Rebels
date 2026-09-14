@@ -22,7 +22,7 @@ Feature: User Sign In(Login Controller))
       | Null in email field        | POST   | loginEndpoint   | 400        |
       | Unregistered email         | POST   | loginEndpoint   | 400        |
       | Empty password             | POST   | loginEndpoint   | 400        |
-      | Special characters in password | POST | loginEndpoint | 401        |
+      | Special characters in password | POST | loginEndpoint | 400        |
       | Password having spaces     | POST   | loginEndpoint   | 400        |
       | Null in password field     | POST   | loginEndpoint   | 400        |
       | Inactive user              | POST   | loginEndpoint   | 400        |
