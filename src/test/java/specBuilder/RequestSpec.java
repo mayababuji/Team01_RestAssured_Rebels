@@ -17,6 +17,9 @@ public class RequestSpec {
 
     public static RequestSpecification getRequestSpec() {
         initializeLogStream();
+        if (SharedTestData.token == null || SharedTestData.token.trim().isEmpty()) {
+            SharedTestData.generateAndSetToken();
+        }
         return baseBuilder()
                 .addHeader("Authorization", "Bearer " + SharedTestData.token)
                 .build();
@@ -47,6 +50,17 @@ public class RequestSpec {
                 .addHeader("Content-Type", "application/json")
                 .addFilter(RequestLoggingFilter.logRequestTo(logStream))
                 .addFilter(ResponseLoggingFilter.logResponseTo(logStream));
+    }
+    public static RequestSpecification getSpecForScenario(String scenarioName) {
+        if (scenarioName.contains("No_Auth") || scenarioName.contains("NoAuth")) {
+            return getRequestSpecWithoutAuth();
+        } else if (scenarioName.contains("Invalid_Token") || scenarioName.contains("InvalidToken")) {
+            return getRequestSpecWithCustomToken("invalid_token_12345");
+        } else if (scenarioName.contains("Invalid_Auth") || scenarioName.contains("Missing_Bearer")) {
+            return getRequestSpecInvalidAuth();
+        } else {
+            return getRequestSpec();
+        }
     }
 
     private static void initializeLogStream() {

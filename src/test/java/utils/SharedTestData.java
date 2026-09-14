@@ -8,6 +8,11 @@ import io.restassured.response.Response;
 import specBuilder.RequestSpec;
 
 
+import configReader.ConfigReader;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import specBuilder.RequestSpec;
+
 public class SharedTestData {
 
     protected static final List<Integer> batchIds = new ArrayList<>();
@@ -63,6 +68,55 @@ public class SharedTestData {
         String loginEndpoint = baseUrl.endsWith("/")
         ? baseUrl + "login"
         : baseUrl + "/login";
+<<<<<<< HEAD
+=======
+
+        String requestBody = String.format(
+                "{\"userLoginEmailId\":\"%s\",\"password\":\"%s\"}",
+                adminEmail,
+                adminPassword
+        );
+
+        System.out.println("===== LOGIN REQUEST =====");
+        System.out.println("POST " + loginEndpoint);
+        System.out.println("Request Body = " + requestBody);
+        System.out.println("=========================");
+
+        Response response = RestAssured
+                .given()
+                .spec(RequestSpec.getRequestSpecWithoutAuth())
+                .body(requestBody)
+                .when()
+                .post(loginEndpoint);
+
+        System.out.println("===== LOGIN RESPONSE =====");
+        System.out.println("Status Code = " + response.getStatusCode());
+        System.out.println("Response Body = " + response.getBody().asString());
+        System.out.println("==========================");
+
+        if (response.getStatusCode() != 200) {
+            throw new IllegalStateException(
+                    "Login failed. Status: "
+                            + response.getStatusCode()
+                            + ", Response: "
+                            + response.getBody().asString()
+            );
+        }
+
+        String capturedToken = response.jsonPath().getString("token");
+
+        if (capturedToken == null || capturedToken.trim().isEmpty()) {
+            throw new IllegalStateException(
+                    "Login succeeded but token was not found in response. Response: "
+                            + response.getBody().asString()
+            );
+        }
+
+        token = capturedToken;
+
+        System.out.println("===== TOKEN GENERATED SUCCESSFULLY =====");
+    }
+>>>>>>> main
 
         String requestBody = String.format(
                 "{\"userLoginEmailId\":\"%s\",\"password\":\"%s\"}",
