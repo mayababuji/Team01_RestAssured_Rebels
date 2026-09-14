@@ -41,19 +41,13 @@ Feature: User Module
       | Create_User_Invalid_User_Visa_Status    |
       | Create_User_Invalid_Token               |
       | Create_User_Invalid_Endpoint            |
-<<<<<<< HEAD
-      # | Create_User_Invalid_Content_Type        |
-      | Create_User_Invalid_Method              |
-      | Create_User_No_Auth                     |
 
-  @GetAllActiveUsers_Positive
-=======
       | Create_User_Invalid_Content_Type        |
      # | Create_User_Invalid_Method            |
       | Create_User_No_Auth                     |
 
    @GetAllActiveUsers_Positive
->>>>>>> main
+
   Scenario Outline: Admin retrieves all active users with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -75,11 +69,10 @@ Feature: User Module
       | Get_All_Active_Users_Invalid_Method   |
       | Get_All_Active_Users_No_Auth          |
 
-<<<<<<< HEAD
-  @GetActiveUserEmails_Positive
-=======
+
    @GetActiveUserEmails_Positive
->>>>>>> main
+
+
   Scenario Outline: Admin retrieves all active user emails with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -89,11 +82,9 @@ Feature: User Module
       | ScenarioName                          |
       | Get_Active_User_Emails_Valid_Endpoint |
 
-<<<<<<< HEAD
-  @GetActiveUserEmails_Negative
-=======
+
  @GetActiveUserEmails_Negative
->>>>>>> main
+
   Scenario Outline: Check if admin receives proper error code when retrieving active user emails with invalid request parameters
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All Active Users
@@ -104,8 +95,4 @@ Feature: User Module
       | Get_Active_User_Emails_Invalid_Endpoint |
       | Get_Active_User_Emails_Invalid_Method   |
       | Get_Active_User_Emails_No_Auth          |
-<<<<<<< HEAD
-=======
 
-
->>>>>>> main
