@@ -58,7 +58,7 @@ public class ProgramStepDef extends SharedTestData {
             programInput.setProgramName(null);
         } else {
             // Generate unique program name
-            String uniqueProgramName = programInput.getProgramName() + RandomStringUtils.randomAlphabetic(2);
+            String uniqueProgramName = programInput.getProgramName() + RandomStringUtils.randomAlphabetic(3);
             programInput.setProgramName(uniqueProgramName);
             SharedTestData.programName = uniqueProgramName;
         }
