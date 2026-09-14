@@ -1,34 +1,4 @@
-/*package configReader;
-
-import java.io.InputStream;
-import java.util.Properties;
-
-public class ConfigReader {
-
-    private static final Properties properties = new Properties();
-
-    static {
-        try (InputStream input = ConfigReader.class.getClassLoader()
-                .getResourceAsStream("env.properties")) {
-
-            if (input == null) {
-                throw new RuntimeException("env.properties not found in src/test/resources");
-            }
-
-            properties.load(input);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load env.properties", e);
-        }
-    }
-
-    public static String get(String key) {
-        return properties.getProperty(key);
-    }
-} */
-
-
-    package configReader;
+  package configReader;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -44,14 +14,14 @@ public class ConfigReader {
                     .getResourceAsStream("env.properties");
             properties.load(input1);
 
-            // Load endpoints.properties (has /login, /batches, /programs, etc.)
+            // Load API end points (endpoints.properties) 
             InputStream input2 = ConfigReader.class.getClassLoader()
                     .getResourceAsStream("endpoints.properties");
             if (input2 != null) {
                 properties.load(input2);
             }
 
-            // Load credentials-UAT.properties (has email, password)
+            // Load environment-specific credentials(has email, password)
             String env = System.getProperty("env");
             if (env == null) {
                 env = "UAT";
@@ -68,7 +38,7 @@ public class ConfigReader {
         }
     }
 
-    public static String get(String key) {
+     public static String get(String key) {
         return properties.getProperty(key);
     }
 }
