@@ -72,3 +72,109 @@ Feature: Program Batch module for LMS API
     When Admin sends GET request to retrieve the batch
     Then Admin receives expected status code with error message
 
+  @GetByBatchName
+  Scenario: Check if Admin is able to retrieve batch with valid batch name
+    Given Admin create GET request to retrieve batch with valid batch name
+    When Admin sends GET request to retrieve the batch
+    Then Admin receives success code with GET response body having given batch name
+
+  @GetByBatchName
+  Scenario Outline: Check if Admin is able to retrieve batch by BatchName with invalid input
+    Given Admin create GET request by BatchName with invalid input for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve the batch
+    Then Admin receives expected status code with error message
+
+    Examples:
+      | scenario                         |
+      | GetBatchByName_Invalid_BatchName |
+      | GetBatchByName_Invalid_Endpoint  |
+
+  @NoAuth
+  Scenario: Check if Admin is unable to retrieve batch by batch name without authorization
+    Given Admin create GET request by BatchName with invalid input for "GetBatchByName_NoAuth" from excel sheet
+    When Admin sends GET request to retrieve the batch
+    Then Admin receives expected status code with error message
+
+  @GetByProgramId
+  Scenario: Check if Admin is able to retrieve batch with valid programId
+    Given Admin create GET request to retrieve batch with valid programId
+    When Admin sends GET request to retrieve the batch
+    Then Admin receives success code with GET response body having given programId
+
+
+
+  @GetByProgramId
+  Scenario Outline: Check if Admin is able to retrieve batch by programId with invalid input
+    Given Admin create GET request by programId with invalid input for scenario "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve the batch
+    Then Admin receives expected status code with error message
+
+    Examples:
+      | scenario                            |
+      | GetBatchByProgram_Invalid_ProgramId |
+      | GetBatchByProgram_Invalid_Endpoint  |
+
+  @NoAuth
+  Scenario: Check if Admin is unable to retrieve batches by programId without authorization
+    Given Admin create GET request by programId with invalid input for scenario "GetBatchByProgram_NoAuth" from excel sheet
+    When Admin sends GET request to retrieve batches by programId
+    Then Admin receives expected status code with error message
+
+
+  @PutBatchByBatchId
+  Scenario: Check if Admin is able to update batch with valid batch Id to update programId
+    Given Admin create PUT request to update batch with valid batchId for scenario "PutBatchById_Valid_BatchId_UpdateProgram"
+    When Admin sends PUT request to update the batch
+    Then Admin received success code with updated ProgramId in response
+  @PutBatchByBatchId
+  Scenario Outline: Check if Admin is able to update batch with invalid input
+    Given Admin create PUT request with invalid input for each "<scenario>" from excel sheet
+    When Admin sends PUT request to update the batch
+    Then Admin receives expected status code with error message
+
+    Examples:
+      | scenario                              |
+      | PutBatchById_Missing_Mandatory_Fields |
+      | PutBatchById_Invalid_BatchId          |
+      | PutBatchById_Invalid_Endpoint         |
+      | PutBatchById_Invalid_BatchStatus      |
+      | PutBatchById_Invalid_NoOfClasses      |
+      | PutBatchById_Invalid_ProgramId        |
+      | PutBatchById_Invalid_BatchName        |
+
+
+
+
+  @PutBatchByBatchId
+  Scenario: Check if Admin is able to update batch with valid batch Id to update batchname
+    Given Admin create PUT request to update batch with valid batchId for scenario "PutBatchById_Valid_BatchId_UpdateBatchName"
+    When Admin sends PUT request to update the batch
+    Then Admin received success code with updated batchName in response
+
+  @PutBatchByBatchId
+  Scenario: Check if Admin is able to update batch with valid batch Id to update batchStatus
+    Given Admin create PUT request to update batch with valid batchId for scenario "PutBatchById_Valid_BatchId_UpdateBatchStatus"
+    When Admin sends PUT request to update the batch
+    Then Admin received success code with updated batchStatus in response
+
+
+  @PutBatchByBatchId
+  Scenario: Check if Admin is able to update batch with valid batch Id to update batchNoOfClasses
+    Given Admin create PUT request to update batch with valid batchId for scenario "PutBatchById_Valid_BatchId_UpdateNoOfClasses"
+    When Admin sends PUT request to update the batch
+    Then Admin received success code with updated batchNoOfClasses in response
+
+
+  @PutBatchByBatchId
+  Scenario: Check if Admin is able to update batch with valid batchId and missing additional fields
+    Given Admin create PUT request to update batch with valid batchId for scenario "PutBatchById_Missing_Additional_Fields"
+    When Admin sends PUT request to update the batch
+    Then Admin receives expected status code with error message
+
+
+  @PutBatchByBatchId
+  @NoAuth
+  Scenario: Check if Admin is unable to update batch without authorization
+    Given Admin create PUT request with invalid input for each "PutBatchById_NoAuth" from excel sheet
+    When Admin sends PUT request to update the batch
+    Then Admin receives expected status code with error message
