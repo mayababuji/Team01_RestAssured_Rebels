@@ -67,19 +67,20 @@ public class RequestSpec {
     }
 
     public static RequestSpecification getSpecForScenario(String scenarioName) {
-        if (scenarioName.contains("No_Auth")
-                || scenarioName.contains("NoAuth")) {
+        String scenario = scenarioName == null ? "" : scenarioName;
 
+        if (scenario.contains("No_Auth")
+                || scenario.contains("NoAuth")) {
             return getRequestSpecWithoutAuth();
+        }
 
-        } else if (scenarioName.contains("Invalid_Token")
-                || scenarioName.contains("InvalidToken")) {
-
+        if (scenario.contains("Invalid_Token")
+                || scenario.contains("InvalidToken")) {
             return getRequestSpecWithCustomToken("invalid_token_12345");
+        }
 
-        } else if (scenarioName.contains("Invalid_Auth")
-                || scenarioName.contains("Missing_Bearer")) {
-
+        if (scenario.contains("Invalid_Auth")
+                || scenario.contains("Missing_Bearer")) {
             return getRequestSpecInvalidAuth();
         }
 
