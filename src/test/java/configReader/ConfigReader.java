@@ -1,8 +1,6 @@
 package configReader;
-
 import java.io.InputStream;
 import java.util.Properties;
-
 public class ConfigReader {
 
     private static Properties properties = new Properties();

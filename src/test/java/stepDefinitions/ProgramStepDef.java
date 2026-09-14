@@ -58,7 +58,7 @@ public class ProgramStepDef extends SharedTestData {
             programInput.setProgramName(null);
         } else {
             // Generate unique program name
-            String uniqueProgramName = programInput.getProgramName() + RandomStringUtils.randomAlphabetic(2);
+            String uniqueProgramName = programInput.getProgramName() + RandomStringUtils.randomAlphabetic(3);
             programInput.setProgramName(uniqueProgramName);
             SharedTestData.programName = uniqueProgramName;
         }
@@ -91,35 +91,72 @@ public class ProgramStepDef extends SharedTestData {
     public void admin_verifies_the_response_payload_with_expected_output_from_the_data_sheet() {
 
         int expectedStatus = Integer.parseInt(data.get("ExpectedStatusCode"));
-        response.then().log().all().statusCode(expectedStatus);
+
+        response.then()
+                .log()
+                .all()
+                .statusCode(expectedStatus);
 
         if (expectedStatus != 201) {
             ProgramResponseValidator.validateStatus(response, data);
             return;
         }
 
-        // Schema validation
-        response.then().assertThat()
-                .body(matchesJsonSchemaInClasspath("schemas/Program/CreateProgramSchema.json"));
+        response.then()
+                .assertThat()
+                .body(matchesJsonSchemaInClasspath(
+                        "schemas/Program/CreateProgramSchema.json"
+                ));
 
-        // Deserialize response
-        CreateProgramResponse actualResponse = response.as(CreateProgramResponse.class);
+        CreateProgramResponse actualResponse =
+                response.as(CreateProgramResponse.class);
 
-        // Store programName & programId globally
+        if (actualResponse.getProgramId() <= 0) {
+            throw new IllegalStateException(
+                    "Create Program API returned an invalid programId: "
+                            + actualResponse.getProgramId()
+            );
+        }
+
+        if (actualResponse.getProgramName() == null
+                || actualResponse.getProgramName().isBlank()) {
+            throw new IllegalStateException(
+                    "Create Program API returned null or blank programName."
+            );
+        }
+
+        SharedTestData.programId = actualResponse.getProgramId();
         SharedTestData.programName = actualResponse.getProgramName();
-        SharedTestData.programNameList.add(actualResponse.getProgramName());
 
-        int createdId = actualResponse.getProgramId();
-        SharedTestData.programId = createdId;
-        SharedTestData.programIdList.add(createdId);
+        if (!SharedTestData.programIdList.contains(SharedTestData.programId)) {
+            SharedTestData.programIdList.add(SharedTestData.programId);
+        }
 
-        // Field validations
-        Assert.assertEquals(actualResponse.getProgramDescription(), programInput.getProgramDescription(),
-                "ProgramDescription is not matching");
+        if (!SharedTestData.programNameList.contains(SharedTestData.programName)) {
+            SharedTestData.programNameList.add(SharedTestData.programName);
+        }
 
-        Assert.assertEquals(actualResponse.getProgramName(), programInput.getProgramName(),
-                "ProgramName is not matching");
+        System.out.println("==========================================");
+        System.out.println("PROGRAM DATA SAVED IN SHAREDMETHHHODDATA");
+        System.out.println("programId: " + SharedTestData.programId);
+        System.out.println("programName: " + SharedTestData.programName);
+        System.out.println("==========================================");
 
-        assertTrue(actualResponse.getProgramId() > 0, "ProgramId should not be negative value");
+        Assert.assertEquals(
+                actualResponse.getProgramDescription(),
+                programInput.getProgramDescription(),
+                "ProgramDescription is not matching"
+        );
+
+        Assert.assertEquals(
+                actualResponse.getProgramName(),
+                programInput.getProgramName(),
+                "ProgramName is not matching"
+        );
+
+        Assert.assertTrue(
+                actualResponse.getProgramId() > 0,
+                "ProgramId should be a positive value"
+        );
     }
 }
