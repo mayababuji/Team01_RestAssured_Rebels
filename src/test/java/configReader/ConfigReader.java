@@ -1,4 +1,4 @@
-  package configReader;
+package configReader;
 
 import java.io.InputStream;
 import java.util.Properties;
