@@ -95,4 +95,26 @@ Feature: User Module
       | Get_Active_User_Emails_Invalid_Endpoint |
       | Get_Active_User_Emails_Invalid_Method   |
       | Get_Active_User_Emails_No_Auth          |
+          @GetAllRoles_Positive
+  Scenario Outline: Admin retrieves all user roles with valid Endpoint
+    Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
+    When Admin sends HTTPS Request for Get All User Roles
+    Then Admin receives StatusCode and response body for "<ScenarioName>"
+
+    Examples: 
+      | ScenarioName                    |
+      | Get_All_Roles_Valid_Endpoint    |
+
+  @GetAllRoles_Negative
+  Scenario Outline: Check if admin receives proper error code when retrieving user roles with invalid request parameters
+    Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
+    When Admin sends HTTPS Request for Get All User Roles
+    Then Admin receives StatusCode and response body for "<ScenarioName>"
+
+    Examples:
+      | ScenarioName                    |
+      | Get_All_Roles_Invalid_Endpoint  |
+      | Get_All_Roles_Invalid_Method    |
+      | Get_All_Roles_No_Auth           |
+
 
