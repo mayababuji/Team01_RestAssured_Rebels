@@ -30,10 +30,6 @@ public class GetAllUsersStepDef {
         this.scenarioContext = scenarioContext;
     }
 
-    // ============================================================
-    // GET ALL USERS - POSITIVE
-    // ============================================================
-
     @Given("Admin create GET request with valid data for {string} from excel sheet")
     public void admin_create_get_request_with_valid_data_from_excel(
             String scenarioName) throws IOException {
@@ -82,9 +78,7 @@ public class GetAllUsersStepDef {
 
     }
 
-    // ============================================================
-    // GET ALL USERS - COMMON GET
-    // ============================================================
+    
 
     @When("Admin sends GET request to retrieve all users")
     public void admin_sends_get_request_to_retrieve_all_users() {
@@ -167,9 +161,7 @@ public class GetAllUsersStepDef {
         );
     }
 
-    // ============================================================
-    // GET ALL USERS - POSITIVE THEN
-    // ============================================================
+    
 
     @Then("Admin receives 200 OK status with response body")
     public void admin_receives_200_ok_status_with_response_body() {
@@ -213,9 +205,7 @@ public class GetAllUsersStepDef {
         );
     }
 
-    // ============================================================
-    // GET ALL USERS - INVALID ENDPOINT
-    // ============================================================
+   
 
     @Given("Admin create GET request with invalid input for {string} from excel sheet")
     public void admin_create_get_request_with_invalid_input_from_excel(
@@ -263,10 +253,7 @@ public class GetAllUsersStepDef {
                 .spec(RequestSpec.getRequestSpec());
     }
 
-    // ============================================================
-    // GET ALL USERS - INVALID METHOD
-    // ============================================================
-
+    
     @Given("Admin create invalid request for {string} from excel sheet")
     public void admin_create_invalid_request_from_excel(
             String scenarioName) throws IOException {
@@ -348,9 +335,7 @@ public class GetAllUsersStepDef {
         System.out.println("Response Body: " + response.getBody().asString());
     }
 
-    // ============================================================
-    // INVALID ENDPOINT THEN
-    // ============================================================
+    
 
     @Then("Admin receives expected status code for invalid endpoint")
     public void admin_receives_expected_status_code_for_invalid_endpoint() {
@@ -389,9 +374,6 @@ public class GetAllUsersStepDef {
         );
     }
 
-    // ============================================================
-    // INVALID METHOD THEN
-    // ============================================================
 
     @Then("Admin receives expected status code for invalid method")
     public void admin_receives_expected_status_code_for_invalid_method() {
@@ -430,9 +412,6 @@ public class GetAllUsersStepDef {
         );
     }
 
-    // ============================================================
-    // GET USER COUNT - INVALID METHOD
-    // ============================================================
 
     @When("Admin sends invalid method request to retrieve active and inactive user count")
     public void admin_sends_invalid_method_request_to_retrieve_active_and_inactive_user_count() {
