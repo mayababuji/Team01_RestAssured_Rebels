@@ -21,6 +21,9 @@ public class SharedTestData {
 
     protected static int programId;
     protected static String programName;
+    
+    public static String roleId;
+    public static String userId;
 
     // Shared authentication token
     public static String token;
