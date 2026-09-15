@@ -11,19 +11,10 @@ public class BatchRequestUtil {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private BatchRequestUtil() {
-        // Prevent utility-class instantiation.
+      
     }
 
-    /**
-     * Produces a batch JSON request body with valid dynamic program data.
-     *
-     * @param requestBody Original JSON body read from Excel.
-     * @param batchNoOfClassesValue Value to set for batchNoOfClasses.
-     *                              Pass null to remove the property.
-     * @param batchStatusValue Value to set for batchStatus.
-     *                         Pass null to retain the Excel value.
-     * @return Updated JSON string ready for REST Assured .body(...)
-     */
+
     public static String createValidBatchJsonWithOverrides(
             String requestBody,
             Object batchNoOfClassesValue,
@@ -57,11 +48,7 @@ public class BatchRequestUtil {
         return MAPPER.writeValueAsString(bodyMap);
     }
 
-    /**
-     * Produces a valid JSON body for a NoAuth PUT scenario.
-     * This keeps every payload field valid so authorization is the only
-     * expected reason for request failure.
-     */
+
     public static String createValidBatchJson(
             String requestBody) throws IOException {
 
@@ -72,11 +59,7 @@ public class BatchRequestUtil {
         );
     }
 
-    /**
-     * Produces a request body for an invalid/deleted program ID scenario.
-     * The batch name must still follow:
-     * <programName>_<number>
-     */
+
     public static String createBatchJsonForSpecificProgram(
             String requestBody,
             int programId,
