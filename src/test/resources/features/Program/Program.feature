@@ -9,7 +9,6 @@ Feature: Validate Program Module
     Examples:
       | ScenarioName                               |
       | Create valid request body                  |
-      | Create only Mandatory fields               |
       | Create description Length between 4 and 25 |
       | Create name Length between 4 and 25        |
 # -------------------------------------------------POST Invalid----------------------------------------

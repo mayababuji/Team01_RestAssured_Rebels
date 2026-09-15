@@ -22,7 +22,7 @@ Feature: User Module
       | Create_User_Empty_VisaStatus            |
       | Create_User_Empty_RoleId                |
       | Create_User_Empty_RoleStatus            |
-      # | Create_User_Empty_LoginStatus         |
+       | Create_User_Empty_LoginStatus         |
       | Create_User_Empty_Email                 |
       | Create_User_Empty_PhoneNumber           |
       | Create_User_Duplicate_Email             |
@@ -46,7 +46,7 @@ Feature: User Module
      # | Create_User_Invalid_Method            |
       | Create_User_No_Auth                     |
 
-   @GetAllActiveUsers_Positive
+  @GetAllActiveUsers_Positive
 
   Scenario Outline: Admin retrieves all active users with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
@@ -70,7 +70,7 @@ Feature: User Module
       | Get_All_Active_Users_No_Auth          |
 
 
-   @GetActiveUserEmails_Positive
+  @GetActiveUserEmails_Positive
 
 
   Scenario Outline: Admin retrieves all active user emails with valid Endpoint
@@ -83,7 +83,7 @@ Feature: User Module
       | Get_Active_User_Emails_Valid_Endpoint |
 
 
- @GetActiveUserEmails_Negative
+  @GetActiveUserEmails_Negative
 
   Scenario Outline: Check if admin receives proper error code when retrieving active user emails with invalid request parameters
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
@@ -95,13 +95,13 @@ Feature: User Module
       | Get_Active_User_Emails_Invalid_Endpoint |
       | Get_Active_User_Emails_Invalid_Method   |
       | Get_Active_User_Emails_No_Auth          |
-          @GetAllRoles_Positive
+  @GetAllRoles_Positive
   Scenario Outline: Admin retrieves all user roles with valid Endpoint
     Given Admin creates GET Request for the LMS API endpoint with data from Excel "<ScenarioName>"
     When Admin sends HTTPS Request for Get All User Roles
     Then Admin receives StatusCode and response body for "<ScenarioName>"
 
-    Examples: 
+    Examples:
       | ScenarioName                    |
       | Get_All_Roles_Valid_Endpoint    |
 
@@ -116,5 +116,3 @@ Feature: User Module
       | Get_All_Roles_Invalid_Endpoint  |
       | Get_All_Roles_Invalid_Method    |
       | Get_All_Roles_No_Auth           |
-
-

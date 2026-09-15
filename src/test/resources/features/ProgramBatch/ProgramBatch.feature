@@ -178,3 +178,36 @@ Feature: Program Batch module for LMS API
     Given Admin create PUT request with invalid input for each "PutBatchById_NoAuth" from excel sheet
     When Admin sends PUT request to update the batch
     Then Admin receives expected status code with error message
+
+  @DeleteBatchById
+  Scenario Outline: Check if Admin is able to delete batch by batchId with invalid input
+    Given Admin create DELETE request by BatchId with invalid input for scenario "<scenario>" from excel sheet
+    When Admin sends DELETE request to delete the batch
+    Then Admin receives expected status code with error message
+
+    Examples:
+      | scenario                         |
+      | DeleteBatchById_NoAuth           |
+      | DeleteBatchById_Invalid_Endpoint |
+      | DeleteBatchById_Invalid_BatchId  |
+
+  @DeleteBatchById
+  Scenario: Check if Admin is able to delete batchById with valid BatchId
+    Given Admin create DELETE request with valid batchId
+    When Admin sends DELETE request to delete the batch
+    Then Admin receives success code with deleted message
+
+  @DeleteBatchById
+  Scenario: Check if Admin is able to get batchById after batch is deleted
+    When Admin sends GET request to retrieve deleted batch with Id
+    Then Admin receives success code with GET response body for deleted batch
+#
+  @DeleteBatchByName
+  Scenario: Check if Admin is able to get batchByName after batch is deleted
+    When Admin sends GET request to retrieve deleted batch with name
+    Then Admin receives success code with GET response body for deleted batch by name
+
+  @DeleteBatchById
+  Scenario: Check if Admin is able to update deleted batchbyId
+    When Admin sends PUT request to update deleted batch status
+    Then Admin receives success code with Active batch status in the response body

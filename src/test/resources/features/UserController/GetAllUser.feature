@@ -2,7 +2,7 @@
 Feature: User module for LMS API
 
   Background:
-     Given Admin sets Bearer token
+    Given Admin sets Bearer token
 
   @Get_Positive
   Scenario Outline: Check if Admin is able to retrieve all users with valid endpoint
@@ -58,8 +58,8 @@ Feature: User module for LMS API
       | Get_Active_Inactive_User_Count_R03    |
 
 
-@GetUserCount_Negative
-Scenario Outline: Get user count with invalid Role ID
+  @GetUserCount_Negative
+  Scenario Outline: Get user count with invalid Role ID
     Given Admin creates GET request with invalid Role ID for "<scenario>" from Excel sheet
     When Admin sends GET request to retrieve active and inactive user count
     Then Admin receives 404 Not Found status with Role ID not found message
@@ -70,7 +70,7 @@ Scenario Outline: Get user count with invalid Role ID
 
   @GetUserCount_Negative
   Scenario Outline: Check if Admin is unable to retrieve user count with invalid endpoint
-   Given Admin creates GET request with invalid endpoint for user count scenario "<scenario>" from excel sheet
+    Given Admin creates GET request with invalid endpoint for user count scenario "<scenario>" from excel sheet
     When Admin sends GET request to retrieve active and inactive user count
     Then Admin receives expected status code for invalid endpoint for user count
 
