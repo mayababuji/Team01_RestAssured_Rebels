@@ -1,0 +1,13 @@
+test-output/
+target/
+.settings/
+.classpath
+.project
+credentials-*.properties
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/,*.iml
+*.iml
+.mvn/
