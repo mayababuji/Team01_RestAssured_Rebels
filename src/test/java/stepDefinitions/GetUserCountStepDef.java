@@ -33,9 +33,7 @@ public class GetUserCountStepDef {
         this.scenarioContext = scenarioContext;
     }
 
-    // ============================================================
-    // POSITIVE
-    // ============================================================
+    
 
     @Given("Admin create GET request with valid data for user count scenario {string} from excel sheet")
     public void admin_create_get_request_with_valid_data_for_user_count_scenario(
@@ -186,9 +184,7 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // NEGATIVE - INVALID ROLE ID
-    // ============================================================
+   
 
     @Given("Admin create GET request with invalid role id for {string} from excel sheet")
     public void admin_create_get_request_with_invalid_role_id(
@@ -335,10 +331,7 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // NEGATIVE - WITHOUT AUTHORIZATION
-    // ============================================================
-
+    
     @Given("Admin create GET request without authorization for {string} from excel sheet")
     public void admin_create_get_request_without_authorization(
             String scenarioName) throws IOException {
@@ -390,9 +383,6 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // COMMON WHEN
-    // ============================================================
 
     @When("Admin sends GET request to retrieve active and inactive user count")
     public void admin_sends_get_request_to_retrieve_active_and_inactive_user_count() {
@@ -462,9 +452,7 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // POSITIVE THEN
-    // ============================================================
+    
 
     @Then("Admin receives 200 OK status with response body for user count")
     public void admin_receives_200_ok_status_with_response_body_for_user_count() {
@@ -564,9 +552,7 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // NEGATIVE THEN - INVALID ENDPOINT
-    // ============================================================
+    
 
     @Then("Admin receives expected status code for invalid endpoint for user count")
     public void admin_receives_expected_status_code_for_invalid_endpoint_for_user_count() {
@@ -627,13 +613,6 @@ System.out.println("Role ID from Excel/Scenario: " + roleId);
         );
     }
 
-    // ============================================================
-    // NEGATIVE THEN - WITHOUT AUTHORIZATION
-    // ============================================================
-
-    // ============================================================
-// WITHOUT AUTHORIZATION THEN
-// ============================================================
 
 @Then("Admin receives expected status code for user without authorization")
 public void admin_receives_expected_status_code_for_user_without_authorization() {

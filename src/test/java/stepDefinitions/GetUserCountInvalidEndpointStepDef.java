@@ -21,17 +21,13 @@ public class GetUserCountInvalidEndpointStepDef {
 
     private final ScenarioContext scenarioContext;
 
-    // ============================================================
-    // CONSTRUCTOR
-    // ============================================================
+   
 
     public GetUserCountInvalidEndpointStepDef(ScenarioContext scenarioContext) {
         this.scenarioContext = scenarioContext;
     }
 
-    // ============================================================
-    // INVALID ENDPOINT REQUEST
-    // ============================================================
+   
 
     @Given("Admin creates GET request with invalid endpoint for user count scenario {string} from excel sheet")
     public void admin_create_get_request_with_invalid_input_for_from_excel_sheet(
@@ -40,9 +36,7 @@ public class GetUserCountInvalidEndpointStepDef {
         System.out.println("==================================================");
         System.out.println("Scenario: " + scenarioName);
 
-        // --------------------------------------------------------
-        // Read test data from Excel
-        // --------------------------------------------------------
+       
 
         testData = ExcelReader.readExcelData(
                 "User",
@@ -54,9 +48,7 @@ public class GetUserCountInvalidEndpointStepDef {
                 "Test data not found in Excel for scenario: " + scenarioName
         );
 
-        // --------------------------------------------------------
-        // Get invalid endpoint
-        // --------------------------------------------------------
+      
 
         String endpoint = testData.get("EndPoint");
 
@@ -80,16 +72,12 @@ public class GetUserCountInvalidEndpointStepDef {
                 "Invalid Endpoint from Excel: " + endpoint
         );
 
-        // --------------------------------------------------------
-        // Create authenticated GET request
-        // --------------------------------------------------------
+        
 
         request = given()
                 .spec(RequestSpec.getRequestSpec());
 
-        // --------------------------------------------------------
-        // Store request and test data in ScenarioContext
-        // --------------------------------------------------------
+        
 
         scenarioContext.setContext(
                 "GET_USER_COUNT_REQUEST",
@@ -101,9 +89,8 @@ public class GetUserCountInvalidEndpointStepDef {
                 testData
         );
 
-        // --------------------------------------------------------
         // Log final request
-        // --------------------------------------------------------
+       
 
         System.out.println(
                 "Final Request: " + endpoint
