@@ -5,7 +5,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.testng.Assert;
 import pojo.CreateProgramRequest;
 import pojo.CreateProgramResponse;
@@ -13,150 +12,322 @@ import utils.ExcelReader;
 import utils.ProgramResponseValidator;
 import utils.ScenarioContext;
 import utils.SharedTestData;
+import utils.TestDataUtil;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
-import static org.testng.Assert.assertTrue;
 
 public class ProgramStepDef extends SharedTestData {
 
-    private Map<String, String> data;
-    private Response response;
-    private static CreateProgramRequest programInput;
+	private Map<String, String> data;
+	private Response response;
+	private CreateProgramRequest programInput;
 
-    private final ScenarioContext scenarioContext;
+	private final ScenarioContext scenarioContext;
 
-    public ProgramStepDef(ScenarioContext scenarioContext) {
-        this.scenarioContext = scenarioContext;
-    }
+	public ProgramStepDef(ScenarioContext scenarioContext) {
+		this.scenarioContext = scenarioContext;
+	}
 
+// =========================================================================================================
+	// CREATE PROGRAM
+	// =========================================================================================================
 
-    @When("Admin sends POST request to create program with different payload for {string} from dataSheet")
-    public void admin_sends_post_request_to_create_program_with_different_payload_for_from_data_sheet(
-            String scenarioNameFeature) throws IOException {
+	@When("Admin sends POST request to create program with different payload for {string} from dataSheet")
+	public void adminSendsPostRequest(String scenarioNameFeature) throws IOException {
 
-        System.out.println("Scenario FEATURE IS Name: " + scenarioNameFeature);
+		System.out.println();
+		System.out.println("==========================================");
+		System.out.println("SCENARIO: " + scenarioNameFeature);
+		System.out.println("==========================================");
 
-        data = ExcelReader.readExcelData("Program", scenarioNameFeature);
+// ----------------------------------------------------------------------------------------------
+		// Read Excel data
+// ----------------------------------------------------------------------------------------------
 
-        if (data == null) {
-            throw new RuntimeException("Test data not found for: " + scenarioNameFeature);
-        }
+		data = ExcelReader.readExcelData("Program", scenarioNameFeature);
 
-        if (!scenarioNameFeature.equalsIgnoreCase(data.get("ScenarioName"))) {
-            return;
-        }
+		if (data == null || data.isEmpty()) {
 
-        // Parse request body
-        programInput = ProgramRequestParser.createProgramParseData(data.get("Body"));
+			throw new IllegalStateException("Test data not found in Excel for: " + scenarioNameFeature);
 
-        // Handle missing programName scenario
-        if (scenarioNameFeature.equalsIgnoreCase("CreateProgram_with_Missing_ProgramName")) {
-            programInput.setProgramName(null);
-        } else {
-            // Generate unique program name
-            String uniqueProgramName = programInput.getProgramName() + RandomStringUtils.randomAlphabetic(3);
-            programInput.setProgramName(uniqueProgramName);
-            SharedTestData.programName = uniqueProgramName;
-        }
+		}
 
-        // Get shared request spec
-        RequestSpecification requestSpec = scenarioContext.getRequestSpec();
-        if (requestSpec == null) {
-            throw new IllegalStateException("requestSpec is null – did the Given step run?");
-        }
+// ----------------------------------------------------------------------------------------------
+		// Validate ScenarioName
+// ----------------------------------------------------------------------------------------------
 
-        // Build request
-        requestSpec = given().spec(requestSpec).body(programInput);
+		String excelScenarioName = data.get("ScenarioName");
 
-        // Unified dynamic endpoint logic
-        String httpMethod = data.get("Method");
-        String endPoint = data.get("Endpoint");
+		if (excelScenarioName == null || !scenarioNameFeature.equalsIgnoreCase(excelScenarioName.trim())) {
 
-        if (endPoint.contains("{programId}")) {
-            endPoint = endPoint.replace("{programId}", String.valueOf(SharedTestData.programId));
-        }
+			throw new IllegalStateException("ScenarioName mismatch. " + "Feature=[" + scenarioNameFeature + "] Excel=["
+					+ excelScenarioName + "]");
+		}
 
-        // Send request
-        response = requestSpec.log().all()
-                .when().request(httpMethod, endPoint)
-                .then().log().all()
-                .extract().response();
-    }
+// ----------------------------------------------------------------------------------------------
+		// Expected Status
+// ----------------------------------------------------------------------------------------------
 
-    @Then("Admin verifies the response payload with expected output from the data sheet")
-    public void admin_verifies_the_response_payload_with_expected_output_from_the_data_sheet() {
+		int expectedStatus = Integer.parseInt(data.get("ExpectedStatusCode").trim());
 
-        int expectedStatus = Integer.parseInt(data.get("ExpectedStatusCode"));
+		// Parse Request Body
+		String body = data.get("Body");
 
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatus);
+		if (body == null || body.trim().isEmpty()) {
 
-        if (expectedStatus != 201) {
-            ProgramResponseValidator.validateStatus(response, data);
-            return;
-        }
+			programInput = null;
 
-        response.then()
-                .assertThat()
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/Program/CreateProgramSchema.json"
-                ));
+		} else {
 
-        CreateProgramResponse actualResponse =
-                response.as(CreateProgramResponse.class);
+			programInput = ProgramRequestParser.createProgramParseData(body);
+		}
 
-        if (actualResponse.getProgramId() <= 0) {
-            throw new IllegalStateException(
-                    "Create Program API returned an invalid programId: "
-                            + actualResponse.getProgramId()
-            );
-        }
+// ----------------------------------------------------------------------------------------------
+		// Data Strategy column
+// ----------------------------------------------------------------------------------------------
 
-        if (actualResponse.getProgramName() == null
-                || actualResponse.getProgramName().isBlank()) {
-            throw new IllegalStateException(
-                    "Create Program API returned null or blank programName."
-            );
-        }
+		String dataStrategy = data.get("Data Strategy");
 
-        SharedTestData.programId = actualResponse.getProgramId();
-        SharedTestData.programName = actualResponse.getProgramName();
+		if (dataStrategy == null || dataStrategy.trim().isEmpty()) {
+			throw new IllegalStateException("DataStrategy is missing in Excel for: " + scenarioNameFeature);
+		}
 
-        if (!SharedTestData.programIdList.contains(SharedTestData.programId)) {
-            SharedTestData.programIdList.add(SharedTestData.programId);
-        }
+		switch (dataStrategy.trim().toUpperCase()) {
 
-        if (!SharedTestData.programNameList.contains(SharedTestData.programName)) {
-            SharedTestData.programNameList.add(SharedTestData.programName);
-        }
+		case "UNIQUE":
 
-        System.out.println("==========================================");
-        System.out.println("PROGRAM DATA SAVED IN SHAREDMETHHHODDATA");
-        System.out.println("programId: " + SharedTestData.programId);
-        System.out.println("programName: " + SharedTestData.programName);
-        System.out.println("==========================================");
+			if (programInput == null) {
+				throw new IllegalStateException("Request body is empty for UNIQUE strategy.");
+			}
 
-        Assert.assertEquals(
-                actualResponse.getProgramDescription(),
-                programInput.getProgramDescription(),
-                "ProgramDescription is not matching"
-        );
+			String uniqueProgramName = TestDataUtil.generateUniqueProgramName();
+			programInput.setProgramName(uniqueProgramName);
 
-        Assert.assertEquals(
-                actualResponse.getProgramName(),
-                programInput.getProgramName(),
-                "ProgramName is not matching"
-        );
+			SharedTestData.programName = uniqueProgramName;
 
-        Assert.assertTrue(
-                actualResponse.getProgramId() > 0,
-                "ProgramId should be a positive value"
-        );
-    }
+			System.out.println("Data Strategy : UNIQUE");
+
+			System.out.println("Program Name  : " + uniqueProgramName);
+
+			break;
+
+		case "EXCEL":
+
+			System.out.println("Data Strategy : EXCEL");
+
+			if (programInput != null) {
+				System.out.println("Program Name  : " + programInput.getProgramName());
+			}
+
+			break;
+
+		case "EXISTING":
+
+			if (programInput == null) {
+				throw new IllegalStateException("Request body is empty for EXISTING strategy.");
+			}
+
+			if (SharedTestData.programName == null || SharedTestData.programName.isBlank()) {
+				throw new IllegalStateException("No existing Program Name available.");
+			}
+
+			programInput.setProgramName(SharedTestData.programName);
+
+			System.out.println("Data Strategy : EXISTING");
+			System.out.println("Program Name  : " + SharedTestData.programName);
+
+			break;
+
+		default:
+
+			throw new IllegalStateException(
+					"Invalid DataStrategy '" + dataStrategy + "' in Excel for scenario: " + scenarioNameFeature);
+
+		}
+
+// ----------------------------------------------------------------------------------------------
+		// Request Specification
+// ----------------------------------------------------------------------------------------------
+
+		RequestSpecification requestSpec = scenarioContext.getRequestSpec();
+
+		if (requestSpec == null) {
+			throw new IllegalStateException("requestSpec is null. " + "Did the Given step run?");
+		}
+		// ----------------------------------------------------------------------------------------------
+		// Endpoint
+		// ----------------------------------------------------------------------------------------------
+
+		String endpoint = data.get("Endpoint");
+
+		if (endpoint == null || endpoint.trim().isEmpty()) {
+			throw new IllegalStateException("Endpoint is missing in Excel for: " + scenarioNameFeature);
+		}
+
+// ----------------------------------------------------------------------------------------------
+		// Replace programId if required
+// ----------------------------------------------------------------------------------------------
+
+		if (endpoint.contains("{programId}")) {
+			if (SharedTestData.programId <= 0) {
+
+				throw new IllegalStateException("programId is not available.");
+			}
+
+			endpoint = endpoint.replace("{programId}", String.valueOf(SharedTestData.programId));
+		}
+
+// ------------------------------------------------------------------------------------------------------
+		// HTTP Method
+// ------------------------------------------------------------------------------------------------------
+
+		String method = data.get("Method");
+
+		if (method == null || method.trim().isEmpty()) {
+			throw new IllegalStateException("HTTP Method is missing in Excel for: " + scenarioNameFeature);
+
+		}
+
+// ------------------------------------------------------------------------------------------------------
+		// Build Request
+// ------------------------------------------------------------------------------------------------------
+
+		RequestSpecification requestBuilder = given().spec(requestSpec);
+
+// ------------------------------------------------------------------------------------------------------
+		// Content Type
+// ------------------------------------------------------------------------------------------------------
+
+		String contentType = data.get("Content-type");
+
+		if (contentType != null && !contentType.trim().isEmpty()) {
+			requestBuilder.contentType(contentType.trim());
+		}
+// ------------------------------------------------------------------------------------------------------
+		// Request Body
+// ------------------------------------------------------------------------------------------------------
+
+		if (programInput != null) {
+			requestBuilder.body(programInput);
+		}
+
+// ------------------------------------------------------------------------------------------------------
+		// Send Request
+// ------------------------------------------------------------------------------------------------------
+
+		System.out.println("METHOD  : " + method);
+
+		System.out.println("ENDPOINT : " + endpoint);
+
+		System.out.println("EXPECTED STATUS : " + expectedStatus);
+
+		response = requestBuilder.log().all().when().request(method.trim(), endpoint.trim()).then().log().all()
+				.extract().response();
+
+	}
+
+//***************************************************************************************************
+
+	@Then("Admin verifies the response payload with expected output from the data sheet")
+	public void adminVerifiesResponse() {
+
+		if (response == null) {
+			throw new IllegalStateException("Response is null. " + "API request was not executed.");
+		}
+
+		if (data == null) {
+			throw new IllegalStateException("Excel data is null.");
+		}
+
+		int expectedStatus = Integer.parseInt(data.get("ExpectedStatusCode").trim());
+
+// ------------------------------------------------------------------------------------------------------
+		// INVALID RESPONSE
+// ------------------------------------------------------------------------------------------------------
+
+		if (expectedStatus != 201) {
+			System.out.println("Validating INVALID response...");
+			ProgramResponseValidator.validateStatus(response, data);
+			return;
+		}
+
+// ------------------------------------------------------------------------------------------------------
+		// VALID RESPONSE
+// ------------------------------------------------------------------------------------------------------
+
+		System.out.println("Validating SUCCESS response...");
+
+// ------------------------------------------------------------------------------------------------------
+		// Status Code
+// ------------------------------------------------------------------------------------------------------
+
+		Assert.assertEquals(response.getStatusCode(), 201, "Create Program should return HTTP 201");
+
+// ------------------------------------------------------------------------------------------------------
+		// JSON Schema
+// ------------------------------------------------------------------------------------------------------
+
+		response.then().assertThat().body(matchesJsonSchemaInClasspath("schemas/Program/CreateProgramSchema.json"));
+
+// ------------------------------------------------------------------------------------------------------
+		// Convert response to POJO
+// ------------------------------------------------------------------------------------------------------
+
+		CreateProgramResponse actualResponse = response.as(CreateProgramResponse.class);
+
+// ------------------------------------------------------------------------------------------------------
+		// Validate Program ID
+// ------------------------------------------------------------------------------------------------------
+
+		Assert.assertTrue(actualResponse.getProgramId() > 0, "ProgramId should be greater than 0");
+
+// ------------------------------------------------------------------------------------------------------
+		// Validate Program Name
+// ------------------------------------------------------------------------------------------------------
+
+		Assert.assertNotNull(actualResponse.getProgramName(), "ProgramName should not be null");
+
+		Assert.assertFalse(actualResponse.getProgramName().isBlank(), "ProgramName should not be blank");
+
+// ------------------------------------------------------------------------------------------------------
+		// Validate Description
+// ------------------------------------------------------------------------------------------------------
+
+		Assert.assertEquals(actualResponse.getProgramDescription(), programInput.getProgramDescription(),
+				"ProgramDescription mismatch");
+
+// ------------------------------------------------------------------------------------------------------
+		// Validate Name
+// ------------------------------------------------------------------------------------------------------
+
+		Assert.assertEquals(actualResponse.getProgramName(), programInput.getProgramName(), "ProgramName mismatch");
+
+// ----------------------------------------------------------------------------------------------------------
+		// Save Program Data
+// -------------------------------------------------------------------------------------------------------------
+
+		SharedTestData.programId = actualResponse.getProgramId();
+
+		SharedTestData.programName = actualResponse.getProgramName();
+
+		if (!SharedTestData.programIdList.contains(SharedTestData.programId)) {
+
+			SharedTestData.programIdList.add(SharedTestData.programId);
+		}
+
+		if (!SharedTestData.programNameList.contains(SharedTestData.programName)) {
+			SharedTestData.programNameList.add(SharedTestData.programName);
+		}
+
+		System.out.println();
+		System.out.println("==========================================");
+		System.out.println("PROGRAM CREATED SUCCESSFULLY");
+		System.out.println("Program ID   : " + SharedTestData.programId);
+		System.out.println("Program Name : " + SharedTestData.programName);
+		System.out.println("==========================================");
+	}
 }
