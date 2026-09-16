@@ -28,7 +28,8 @@ public class UserStepDef {
 
     @Given("Admin sets Bearer token")
     public void admin_sets_bearer_token() {
-        SharedTestData.generateAndSetToken();
+       // SharedTestData.generateAndSetToken();
+
         scenarioContext.setRequestSpec(RequestSpec.getRequestSpec());
     }
  // Create user

@@ -1,5 +1,5 @@
 @Batch
-Feature: Program Batch module for LMS API
+Feature: LMS  Program Batch  Module
   Background:
     Given Admin sets authorization to Bearer Token
   @Post_Positive
@@ -14,7 +14,7 @@ Feature: Program Batch module for LMS API
       | CreateBatch_Valid_batchName_minLen        |
       | CreateBatch_Valid_batchDescription_minLen |
       | CreateBatch_Valid_batchDescription_maxLen |
-
+#//scenariocontext
   Scenario Outline: Check if Admin is able to create batch with invalid input
     Given Admin create POST request with invalid input for "<scenario>" from excel sheet
     When Admin sends POST request to create program batch
@@ -24,7 +24,7 @@ Feature: Program Batch module for LMS API
       | scenario                             |
       | CreateBatch_Existing_Batch           |
       | CreateBatch_Missing_Mandatory_Fields |
-
+#//scenariocontext
   @NoAuth
   Scenario: Check if Admin is able to create batch without authorization
     Given Admin create POST request with invalid input for "CreateBatch_NoAuth" from excel sheet

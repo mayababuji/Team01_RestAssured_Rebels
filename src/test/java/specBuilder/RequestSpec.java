@@ -18,10 +18,10 @@ public class RequestSpec {
     public static RequestSpecification getRequestSpec() {
         initializeLogStream();
 
-        if (SharedTestData.token == null
-                || SharedTestData.token.isBlank()) {
-            SharedTestData.generateAndSetToken();
-        }
+//        if (SharedTestData.token == null
+//                || SharedTestData.token.isBlank()) {
+//            SharedTestData.generateAndSetToken();
+//        }
 
         if (SharedTestData.token == null
                 || SharedTestData.token.isBlank()) {

@@ -1,4 +1,4 @@
-Feature: User Module
+Feature: LMS  User Module
 
   Background:
     Given Admin sets Bearer token
@@ -116,3 +116,309 @@ Feature: User Module
       | Get_All_Roles_Invalid_Endpoint  |
       | Get_All_Roles_Invalid_Method    |
       | Get_All_Roles_No_Auth           |
+
+  @Get_Positive
+  Scenario Outline: Check if Admin is able to retrieve all users with valid endpoint
+    Given Admin create GET request with valid data for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives 200 OK status with response body
+
+    Examples:
+      | scenario                   |
+      |Get_All_Users_Valid |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users with invalid endpoint
+    Given Admin create GET request with invalid input for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives expected status code for invalid endpoint
+
+    Examples:
+      | scenario                     |
+      | Get_All_Users_Invalid_Endpoint |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users with invalid method
+    Given Admin create invalid request for "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve all users
+    Then Admin receives expected status code for invalid method
+
+    Examples:
+      | scenario                   |
+      | Get_All_Users_Invalid_Method |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users without authorization
+    Given Admin create GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives expected status code for user without authorization
+
+    Examples:
+      | scenario                              |
+      | GetAllUsers_Without_Authorization     |
+
+  @GetUserCount_Positive
+  Scenario Outline: Check if Admin is able to retrieve count of active and inactive users with valid role
+    Given Admin create GET request with valid data for user count scenario "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives 200 OK status with response body for user count
+
+    Examples:
+      | scenario                              |
+      | Get_Active_Inactive_User_Count_All    |
+      | Get_Active_Inactive_User_Count_R01    |
+      | Get_Active_Inactive_User_Count_R02    |
+      | Get_Active_Inactive_User_Count_R03    |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Get user count with invalid Role ID
+    Given Admin creates GET request with invalid Role ID for "<scenario>" from Excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives 404 Not Found status with Role ID not found message
+
+    Examples:
+      | scenario                                      |
+      | Get_Active_Inactive_User_Count_Invalid_RoleID |
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count with invalid endpoint
+    Given Admin creates GET request with invalid endpoint for user count scenario "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives expected status code for invalid endpoint for user count
+
+    Examples:
+      | scenario                                      |
+      | Get_Active_Inactive_User_Count_Invalid_Endpoint |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count with invalid method
+    Given Admin create invalid request for "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve active and inactive user count
+    Then Admin receives expected status code for invalid method
+
+    Examples:
+      | scenario                                    |
+      | Get_Active_Inactive_User_Count_Invalid_Method |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count without authorization
+    Given Admin create GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives expected status code for user without authorization
+
+    Examples:
+      | scenario                                         |
+      | Get_Active_Inactive_User_Count_Without_Authorization |
+
+  @GetUserProBatch_Positive
+  Scenario Outline: Check if Admin is able to retrieve all users linked to batch ID with valid endpoint
+    Given Admin create GET request with valid data for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users linked to batch
+    Then Admin receives 200 OK status with response body for users linked to batch
+
+
+    Examples:
+      | scenario                    |
+      | Get_User_Pro_Batch_Valid    |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid batch ID
+    Given Admin create GET request with invalid batch ID for "<scenario>" from excel sheet
+    When Admin sends TC-80 invalid batch ID request
+    Then Admin receives 404 Not Found status with batch ID not found message
+
+    Examples:
+      | scenario                              |
+      | Get_User_Pro_Batch_Invalid_BatchID    |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid endpoint
+    Given Admin create GET request with invalid endpoint for "<scenario>" from excel sheet
+    When Admin sends TC-80 invalid endpoint request
+    Then Admin receives expected 404 status code for TC-80 invalid endpoint
+
+    Examples:
+      | scenario                              |
+      | Get_User_Pro_Batch_Invalid_Endpoint   |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid method
+    Given Admin create invalid request for TC-80 "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve all users linked to batch
+    Then Admin receives expected 405 status code for TC-80 invalid method
+
+    Examples:
+      | scenario                          |
+      | Get_User_Pro_Batch_Invalid_Method |
+
+
+  @NoAuth
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch without authorization
+    Given Admin create TC-80 GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends TC-80 GET request without authorization
+    Then Admin receives expected 401 status code for TC-80 without authorization
+
+    Examples:
+      | scenario                                  |
+      | Get_User_Pro_Batch_Without_Authorization |
+
+
+  @Get_Positive
+  Scenario Outline: Check if Admin is able to retrieve all users with valid endpoint
+    Given Admin create GET request with valid data for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives 200 OK status with response body
+
+    Examples:
+      | scenario                   |
+      |Get_All_Users_Valid |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users with invalid endpoint
+    Given Admin create GET request with invalid input for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives expected status code for invalid endpoint
+
+    Examples:
+      | scenario                     |
+      | Get_All_Users_Invalid_Endpoint |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users with invalid method
+    Given Admin create invalid request for "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve all users
+    Then Admin receives expected status code for invalid method
+
+    Examples:
+      | scenario                   |
+      | Get_All_Users_Invalid_Method |
+
+  @Get_Negative
+  Scenario Outline: Check if Admin is unable to retrieve all users without authorization
+    Given Admin create GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users
+    Then Admin receives expected status code for user without authorization
+
+    Examples:
+      | scenario                              |
+      | GetAllUsers_Without_Authorization     |
+
+  @GetUserCount_Positive
+  Scenario Outline: Check if Admin is able to retrieve count of active and inactive users with valid role
+    Given Admin create GET request with valid data for user count scenario "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives 200 OK status with response body for user count
+
+    Examples:
+      | scenario                              |
+      | Get_Active_Inactive_User_Count_All    |
+      | Get_Active_Inactive_User_Count_R01    |
+      | Get_Active_Inactive_User_Count_R02    |
+      | Get_Active_Inactive_User_Count_R03    |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Get user count with invalid Role ID
+    Given Admin creates GET request with invalid Role ID for "<scenario>" from Excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives 404 Not Found status with Role ID not found message
+
+    Examples:
+      | scenario                                      |
+      | Get_Active_Inactive_User_Count_Invalid_RoleID |
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count with invalid endpoint
+    Given Admin creates GET request with invalid endpoint for user count scenario "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives expected status code for invalid endpoint for user count
+
+    Examples:
+      | scenario                                      |
+      | Get_Active_Inactive_User_Count_Invalid_Endpoint |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count with invalid method
+    Given Admin create invalid request for "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve active and inactive user count
+    Then Admin receives expected status code for invalid method
+
+    Examples:
+      | scenario                                    |
+      | Get_Active_Inactive_User_Count_Invalid_Method |
+
+
+  @GetUserCount_Negative
+  Scenario Outline: Check if Admin is unable to retrieve user count without authorization
+    Given Admin create GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve active and inactive user count
+    Then Admin receives expected status code for user without authorization
+
+    Examples:
+      | scenario                                         |
+      | Get_Active_Inactive_User_Count_Without_Authorization |
+
+
+  @GetUserProBatch_Positive
+  Scenario Outline: Check if Admin is able to retrieve all users linked to batch ID with valid endpoint
+    Given Admin create GET request with valid data for "<scenario>" from excel sheet
+    When Admin sends GET request to retrieve all users linked to batch
+    Then Admin receives 200 OK status with response body for users linked to batch
+
+
+    Examples:
+      | scenario                    |
+      | Get_User_Pro_Batch_Valid    |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid batch ID
+    Given Admin create GET request with invalid batch ID for "<scenario>" from excel sheet
+    When Admin sends TC-80 invalid batch ID request
+    Then Admin receives 404 Not Found status with batch ID not found message
+
+    Examples:
+      | scenario                              |
+      | Get_User_Pro_Batch_Invalid_BatchID    |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid endpoint
+    Given Admin create GET request with invalid endpoint for "<scenario>" from excel sheet
+    When Admin sends TC-80 invalid endpoint request
+    Then Admin receives expected 404 status code for TC-80 invalid endpoint
+
+    Examples:
+      | scenario                              |
+      | Get_User_Pro_Batch_Invalid_Endpoint   |
+
+
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch with invalid method
+    Given Admin create invalid request for TC-80 "<scenario>" from excel sheet
+    When Admin sends invalid method request to retrieve all users linked to batch
+    Then Admin receives expected 405 status code for TC-80 invalid method
+
+    Examples:
+      | scenario                          |
+      | Get_User_Pro_Batch_Invalid_Method |
+
+
+  @NoAuth
+  @GetUserProBatch_Negative
+  Scenario Outline: Check if Admin is unable to retrieve users linked to batch without authorization
+    Given Admin create TC-80 GET request without authorization for "<scenario>" from excel sheet
+    When Admin sends TC-80 GET request without authorization
+    Then Admin receives expected 401 status code for TC-80 without authorization
+
+    Examples:
+      | scenario                                  |
+      | Get_User_Pro_Batch_Without_Authorization |
