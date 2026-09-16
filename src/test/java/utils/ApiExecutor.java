@@ -9,7 +9,7 @@ public final class ApiExecutor {
     }
 
     public static Response get(RequestSpecification request) {
-        return request
+        return requireRequest(request)
                 .when()
                 .log()
                 .all()
@@ -17,7 +17,7 @@ public final class ApiExecutor {
     }
 
     public static Response put(RequestSpecification request) {
-        return request
+        return requireRequest(request)
                 .when()
                 .log()
                 .all()
@@ -25,7 +25,7 @@ public final class ApiExecutor {
     }
 
     public static Response delete(RequestSpecification request) {
-        return request
+        return requireRequest(request)
                 .when()
                 .log()
                 .all()
@@ -33,10 +33,23 @@ public final class ApiExecutor {
     }
 
     public static Response post(RequestSpecification request) {
-        return request
+        return requireRequest(request)
                 .when()
                 .log()
                 .all()
                 .post();
+    }
+
+    private static RequestSpecification requireRequest(
+            RequestSpecification request) {
+
+        if (request == null) {
+            throw new IllegalStateException(
+                    "Request specification is null. "
+                            + "Ensure the matching Given step ran before the When step."
+            );
+        }
+
+        return request;
     }
 }

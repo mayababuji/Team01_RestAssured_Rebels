@@ -86,8 +86,19 @@ public final class ResponseValidator {
                 "Response is null. Ensure the request was sent before validation."
         );
 
+        String expectedStatusCodeText = getExcelValue(
+                data,
+                "ExpectedStatusCode"
+        );
+
+        if (expectedStatusCodeText.isBlank()) {
+            throw new IllegalStateException(
+                    "ExpectedStatusCode is missing or blank in Excel."
+            );
+        }
+
         int expectedStatusCode = Integer.parseInt(
-                getExcelValue(data, "ExpectedStatusCode")
+                expectedStatusCodeText
         );
 
         String expectedStatus = getExcelValue(
@@ -250,5 +261,76 @@ public final class ResponseValidator {
         System.out.println("Expected Message     : " + expectedMessage);
         System.out.println("Actual Response Body : " + actualResponseBody);
         System.out.println("==========================================");
+    }
+
+    public static void validateStatusAndSchema(
+            Response response,
+            String expectedStatusCode,
+            String schemaPath) {
+
+        Assert.assertNotNull(
+                response,
+                "Response is null. Ensure the request was sent before validation."
+        );
+
+        if (expectedStatusCode == null || expectedStatusCode.isBlank()) {
+            throw new IllegalStateException(
+                    "ExpectedStatusCode is missing or blank in Excel."
+            );
+        }
+
+        if (schemaPath == null || schemaPath.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Schema path is missing or blank."
+            );
+        }
+
+        response.then()
+                .log()
+                .all()
+                .statusCode(Integer.parseInt(expectedStatusCode.trim()))
+                .body(matchesJsonSchemaInClasspath(schemaPath));
+    }
+    public static void validateResponseMessage(
+            Response response,
+            String expectedMessage) {
+
+        Assert.assertNotNull(
+                response,
+                "Response is null. Ensure the request was sent before validation."
+        );
+
+        if (expectedMessage == null || expectedMessage.isBlank()) {
+            System.out.println(
+                    "ExpectedMessage is blank; message validation is skipped."
+            );
+            return;
+        }
+
+        String actualBody = response.getBody().asString();
+
+        Assert.assertNotNull(
+                actualBody,
+                "Expected message: '" + expectedMessage
+                        + "', but API returned a null response body."
+        );
+
+        Assert.assertFalse(
+                actualBody.isBlank(),
+                "Expected message: '" + expectedMessage
+                        + "', but API returned an empty response body."
+        );
+
+        System.out.println("Expected message: " + expectedMessage);
+        System.out.println("Actual response: " + actualBody);
+
+        Assert.assertTrue(
+                actualBody.contains(expectedMessage.trim()),
+                "Expected message does not match. Expected text: '"
+                        + expectedMessage
+                        + "', actual response: '"
+                        + actualBody
+                        + "'"
+        );
     }
 }

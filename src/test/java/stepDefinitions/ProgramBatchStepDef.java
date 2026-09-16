@@ -193,60 +193,7 @@ public class ProgramBatchStepDef extends SharedTestData {
     @Then("Admin receives expected status code with error message")
     public void admin_receives_expected_status_code_with_error_message() {
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "response is null. Ensure the request When step ran first."
-            );
-        }
-
-        int expectedStatus =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
-
-        String expectedMessage =
-                data.get("ExpectedMessage");
-
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatus);
-
-
-        if (expectedMessage == null || expectedMessage.isBlank()) {
-            System.out.println(
-                    "ExpectedMessage is blank; status-code validation is complete."
-            );
-            return;
-        }
-
-        String body = response.asString();
-
-        if (body == null || body.isBlank()) {
-            Assert.fail(
-                    "Expected error message: '" + expectedMessage
-                            + "', but API returned an empty response body."
-            );
-        }
-
-        String actualMessage =
-                ResponseValidator.extractErrorMessage(response);
-
-        System.out.println("Expected message: " + expectedMessage);
-        System.out.println("Actual message: " + actualMessage);
-
-        Assert.assertNotNull(
-                actualMessage,
-                "Expected error message: '" + expectedMessage
-                        + "', but no message could be extracted from the response."
-        );
-
-        Assert.assertTrue(
-                actualMessage.contains(expectedMessage),
-                "Error message doesn't match. Expected text: '"
-                        + expectedMessage
-                        + "', actual message: '"
-                        + actualMessage
-                        + "'"
-        );
+        ResponseValidator.validateErrorResponse(response, data);
     }
     // ---------------------------------------------------------
     // GET ALL BATCHES
@@ -348,6 +295,7 @@ public class ProgramBatchStepDef extends SharedTestData {
 
     @Given("Admin create GET request with valid batchId")
     public void admin_create_get_request_with_valid_batch_id() throws IOException {
+
         if (SharedTestData.batchId <= 0) {
             throw new IllegalStateException(
                     "batchId is 0. Create a batch and capture its batchId before GET by batchId."
@@ -361,57 +309,50 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         String endpoint = data.get("Endpoint");
 
-        if (!endpoint.contains("{batchId}")) {
+        if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException(
-                    "The valid GET-by-batchId Excel endpoint must contain {batchId}. Actual endpoint: "
-                            + endpoint
+                    "Endpoint is missing in Excel for GetAll_BatchById_Valid_BatchId."
             );
         }
 
-        RequestSpecification requestSpec = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchId", SharedTestData.batchId)
-                .basePath(endpoint);
+        if (!endpoint.contains("{batchId}")) {
+            throw new IllegalStateException(
+                    "The valid GET-by-batchId Excel endpoint must contain {batchId}. "
+                            + "Actual endpoint: " + endpoint
+            );
+        }
+
+        RequestSpecification requestSpec = RequestBuilder.byBatchId(
+                endpoint,
+                SharedTestData.batchId,
+                false
+        );
 
         scenarioContext.setRequestSpec(requestSpec);
     }
-
     @When("Admin sends GET request to retrieve the batch")
     public void admin_sends_get_request_to_retrieve_the_batch() {
-        RequestSpecification requestSpec = scenarioContext.getRequestSpec();
 
-        if (requestSpec == null) {
-            throw new IllegalStateException(
-                    "requestSpec is null. Ensure the GET-by-batchId Given step ran first."
-            );
-        }
-
-        response = requestSpec
-                .when()
-                .log()
-                .all()
-                .get();
+        response = ApiExecutor.get(
+                scenarioContext.getRequestSpec()
+        );
     }
 
     @Then("Admin receives success code with GET response body")
     public void admin_receives_success_code_with_get_response_body() {
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
 
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/GetBatchByIdResponseSchema.json"
-                ));
+        ResponseValidator.validateStatusAndSchema(
+                response,
+                data.get("ExpectedStatusCode"),
+                "schemas/batch/GetBatchByIdResponseSchema.json"
+        );
 
         JsonPath json = response.jsonPath();
 
         Assert.assertEquals(
                 json.getInt("batchId"),
                 SharedTestData.batchId,
-                "Batch Id doesn't match"
+                "Batch ID does not match"
         );
     }
 
@@ -436,36 +377,37 @@ public class ProgramBatchStepDef extends SharedTestData {
         boolean noAuth = scenario.contains("NoAuth");
         boolean endpointNeedsBatchId = endpoint.contains("{batchId}");
 
-        RequestSpecification requestSpec = given()
-                .spec(noAuth
-                        ? RequestSpec.getRequestSpecWithoutAuth()
-                        : RequestSpec.getRequestSpec());
+        String testBatchId = data.get("InvalidBatchId");
 
-
-        if (endpointNeedsBatchId) {
-            String testBatchId = data.get("InvalidBatchId");
-
-            if (testBatchId == null || testBatchId.isBlank()) {
-
-                testBatchId = "9999";
-            }
-
-            requestSpec = requestSpec
-                    .pathParam("batchId", testBatchId);
+        if (testBatchId == null || testBatchId.isBlank()) {
+            testBatchId = "9999";
         }
 
-        requestSpec = requestSpec.basePath(endpoint);
+        RequestSpecification requestSpec;
+
+        if (endpointNeedsBatchId) {
+            requestSpec = RequestBuilder.withPathParam(
+                    endpoint,
+                    "batchId",
+                    testBatchId,
+                    noAuth
+            );
+        } else {
+            requestSpec = noAuth
+                    ? RequestBuilder.withoutAuth(endpoint)
+                    : RequestBuilder.authorized(endpoint);
+        }
 
         System.out.println("===== INVALID GET-BY-ID REQUEST =====");
         System.out.println("Scenario: " + scenario);
         System.out.println("Endpoint: " + endpoint);
         System.out.println("Uses auth: " + !noAuth);
         System.out.println("Endpoint contains {batchId}: " + endpointNeedsBatchId);
+        System.out.println("Test batchId: " + testBatchId);
         System.out.println("======================================");
 
         scenarioContext.setRequestSpec(requestSpec);
     }
-
     // ---------------------------------------------------------
 // GET BATCH BY VALID BATCH NAME
 // ---------------------------------------------------------
@@ -502,10 +444,11 @@ public class ProgramBatchStepDef extends SharedTestData {
             );
         }
 
-        RequestSpecification requestSpec = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchName", SharedTestData.batchName)
-                .basePath(endpoint);
+        RequestSpecification requestSpec = RequestBuilder.byBatchName(
+                endpoint,
+                SharedTestData.batchName,
+                false
+        );
 
         scenarioContext.setRequestSpec(requestSpec);
 
@@ -517,16 +460,14 @@ public class ProgramBatchStepDef extends SharedTestData {
 
     @Then("Admin receives success code with GET response body having given batch name")
     public void admin_receives_success_code_with_get_response_body_having_given_batch_name() {
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
+
+        ResponseValidator.validateStatusAndSchema(
+                response,
+                data.get("ExpectedStatusCode"),
+                "schemas/batch/GetBatchByNameResponseSchema.json"
+        );
 
         response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/GetBatchByNameResponseSchema.json"
-                ))
                 .body("", Matchers.instanceOf(List.class))
                 .body("size()", Matchers.greaterThan(0))
                 .body("batchName", Matchers.hasItem(SharedTestData.batchName));
@@ -553,30 +494,33 @@ public class ProgramBatchStepDef extends SharedTestData {
         boolean noAuth = scenario.contains("NoAuth");
         boolean endpointNeedsBatchName = endpoint.contains("{batchName}");
 
-        RequestSpecification requestSpec = given()
-                .spec(noAuth
-                        ? RequestSpec.getRequestSpecWithoutAuth()
-                        : RequestSpec.getRequestSpec());
+        String testBatchName = data.get("InvalidBatchName");
 
-
-        if (endpointNeedsBatchName) {
-            String testBatchName = data.get("InvalidBatchName");
-
-            if (testBatchName == null || testBatchName.isBlank()) {
-                testBatchName = "InvalidBatchName9999";
-            }
-
-            requestSpec = requestSpec
-                    .pathParam("batchName", testBatchName);
+        if (testBatchName == null || testBatchName.isBlank()) {
+            testBatchName = "InvalidBatchName9999";
         }
 
-        requestSpec = requestSpec.basePath(endpoint);
+        RequestSpecification requestSpec;
+
+        if (endpointNeedsBatchName) {
+            requestSpec = RequestBuilder.withPathParam(
+                    endpoint,
+                    "batchName",
+                    testBatchName,
+                    noAuth
+            );
+        } else {
+            requestSpec = noAuth
+                    ? RequestBuilder.withoutAuth(endpoint)
+                    : RequestBuilder.authorized(endpoint);
+        }
 
         System.out.println("===== INVALID GET-BY-NAME REQUEST =====");
         System.out.println("Scenario: " + scenario);
         System.out.println("Endpoint: " + endpoint);
         System.out.println("Uses auth: " + !noAuth);
         System.out.println("Endpoint contains {batchName}: " + endpointNeedsBatchName);
+        System.out.println("Test batchName: " + testBatchName);
         System.out.println("========================================");
 
         scenarioContext.setRequestSpec(requestSpec);
@@ -584,7 +528,6 @@ public class ProgramBatchStepDef extends SharedTestData {
     // ---------------------------------------------------------
 // GET BATCH BY VALID PROGRAM ID
 // ---------------------------------------------------------
-
     @Given("Admin create GET request to retrieve batch with valid programId")
     public void admin_create_get_request_to_retrieve_batch_with_valid_program_id()
             throws IOException {
@@ -616,10 +559,11 @@ public class ProgramBatchStepDef extends SharedTestData {
             );
         }
 
-        RequestSpecification requestSpec = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("programId", SharedTestData.programId)
-                .basePath(endpoint);
+        RequestSpecification requestSpec = RequestBuilder.byProgramId(
+                endpoint,
+                SharedTestData.programId,
+                false
+        );
 
         scenarioContext.setRequestSpec(requestSpec);
 
@@ -630,6 +574,7 @@ public class ProgramBatchStepDef extends SharedTestData {
     }
     @Then("Admin receives success code with GET response body having given programId")
     public void admin_receives_success_code_with_get_response_body_having_given_program_id() {
+
         if (SharedTestData.programId <= 0) {
             throw new IllegalStateException(
                     "programId is 0. A valid program must be created and its programId "
@@ -637,21 +582,17 @@ public class ProgramBatchStepDef extends SharedTestData {
             );
         }
 
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
+        ResponseValidator.validateStatusAndSchema(
+                response,
+                data.get("ExpectedStatusCode"),
+                "schemas/batch/GetBatchByProgramResponseSchema.json"
+        );
 
         response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/GetBatchByProgramResponseSchema.json"
-                ))
                 .body("", Matchers.instanceOf(List.class))
                 .body("size()", Matchers.greaterThan(0))
                 .body(
                         "programId",
-                        //every value in a returned list must match the condition.
                         Every.everyItem(
                                 Matchers.equalTo(SharedTestData.programId)
                         )
@@ -681,18 +622,12 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         boolean endpointNeedsProgramId = endpoint.contains("{programId}");
 
-        RequestSpecification requestSpec = given()
-                .spec(noAuth
-                        ? RequestSpec.getRequestSpecWithoutAuth()
-                        : RequestSpec.getRequestSpec());
-
-
+        String testProgramId = null;
 
         if (endpointNeedsProgramId) {
-            String testProgramId;
-
 
             if (noAuth) {
+
                 if (SharedTestData.programId <= 0) {
                     throw new IllegalStateException(
                             "programId is 0. Create and capture a valid program "
@@ -710,37 +645,43 @@ public class ProgramBatchStepDef extends SharedTestData {
                     testProgramId = "9999";
                 }
             }
-
-            requestSpec = requestSpec
-                    .pathParam("programId", testProgramId);
         }
 
-        requestSpec = requestSpec.basePath(endpoint);
+        RequestSpecification requestSpec;
+
+        if (endpointNeedsProgramId) {
+            requestSpec = RequestBuilder.withPathParam(
+                    endpoint,
+                    "programId",
+                    testProgramId,
+                    noAuth
+            );
+        } else {
+            requestSpec = noAuth
+                    ? RequestBuilder.withoutAuth(endpoint)
+                    : RequestBuilder.authorized(endpoint);
+        }
 
         System.out.println("===== INVALID GET-BY-PROGRAM-ID REQUEST =====");
         System.out.println("Scenario: " + scenario);
         System.out.println("Endpoint: " + endpoint);
         System.out.println("Uses auth: " + !noAuth);
         System.out.println("Endpoint contains {programId}: " + endpointNeedsProgramId);
+
+        if (testProgramId != null) {
+            System.out.println("Test programId: " + testProgramId);
+        }
+
         System.out.println("==============================================");
 
         scenarioContext.setRequestSpec(requestSpec);
     }
     @When("Admin sends GET request to retrieve batches by programId")
     public void admin_sends_get_request_to_retrieve_batches_by_program_id() {
-        RequestSpecification requestSpec = scenarioContext.getRequestSpec();
 
-        if (requestSpec == null) {
-            throw new IllegalStateException(
-                    "requestSpec is null. Ensure the GET-by-programId Given step ran first."
-            );
-        }
-
-        response = requestSpec
-                .when()
-                .log()
-                .all()
-                .get();
+        response = ApiExecutor.get(
+                scenarioContext.getRequestSpec()
+        );
     }
 
 
@@ -804,37 +745,28 @@ public class ProgramBatchStepDef extends SharedTestData {
                 PutBatchRequest.class
         );
 
-
         if (scenario.contains("UpdateBatchName")) {
-
-            String numericSuffix = TestDataUtil.randomNumericSuffix(4);
-
             String updatedBatchName = SharedTestData.programName
                     + "_"
-                    + numericSuffix;
+                    + TestDataUtil.randomNumericSuffix(4);
 
             batchData.setBatchName(updatedBatchName);
-
         } else {
-
             batchData.setBatchName(SharedTestData.batchName);
         }
 
-
         batchData.setProgramId(SharedTestData.programId);
         batchData.setProgramName(SharedTestData.programName);
-
-
         batchData.setBatchId(0);
 
-        RequestSpecification requestSpec = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchId", SharedTestData.batchId)
-                .basePath(endpoint)
-                .body(batchData);
+        RequestSpecification requestSpec = RequestBuilder.putByBatchId(
+                endpoint,
+                SharedTestData.batchId,
+                batchData,
+                false
+        );
 
         scenarioContext.setRequestSpec(requestSpec);
-
 
         scenarioContext.setContext("BATCH_NAME", batchData.getBatchName());
         scenarioContext.setContext("BATCH_STATUS", batchData.getBatchStatus());
@@ -844,60 +776,39 @@ public class ProgramBatchStepDef extends SharedTestData {
         );
         scenarioContext.setContext("PROGRAM_ID", batchData.getProgramId());
 
-        System.out.println("============= PUT BATCH PAYLOAD =============");
-        System.out.println("Scenario: " + scenario);
-        System.out.println("Endpoint: " + endpoint);
-        System.out.println("Path batchId: " + SharedTestData.batchId);
-        System.out.println("Batch name: " + batchData.getBatchName());
-        System.out.println("Batch description: " + batchData.getBatchDescription());
-        System.out.println("Batch status: " + batchData.getBatchStatus());
-        System.out.println("Batch number of classes: " + batchData.getBatchNoOfClasses());
-        System.out.println("Program ID: " + batchData.getProgramId());
-        System.out.println("Program name: " + batchData.getProgramName());
-        System.out.println("=============================================");
+//        System.out.println("============= PUT BATCH PAYLOAD =============");
+//        System.out.println("Scenario: " + scenario);
+//        System.out.println("Endpoint: " + endpoint);
+//        System.out.println("Path batchId: " + SharedTestData.batchId);
+//        System.out.println("Batch name: " + batchData.getBatchName());
+//        System.out.println("Batch description: " + batchData.getBatchDescription());
+//        System.out.println("Batch status: " + batchData.getBatchStatus());
+//        System.out.println("Batch number of classes: " + batchData.getBatchNoOfClasses());
+//        System.out.println("Program ID: " + batchData.getProgramId());
+//        System.out.println("Program name: " + batchData.getProgramName());
+//        System.out.println("=============================================");
     }
     @When("Admin sends PUT request to update the batch")
     public void admin_sends_put_request_to_update_the_batch() {
 
-        RequestSpecification requestSpec = scenarioContext.getRequestSpec();
-
-        if (requestSpec == null) {
-            throw new IllegalStateException(
-                    "requestSpec is null. Ensure the PUT Given step ran first."
-            );
-        }
-
-        response = requestSpec
-                .when()
-                .log()
-                .all()
-                .put();
+        response = ApiExecutor.put(
+                scenarioContext.getRequestSpec()
+        );
     }
     @Then("Admin received success code with updated ProgramId in response")
     public void admin_received_success_code_with_updated_program_id_in_response() {
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "response is null. Ensure the PUT When step ran first."
-            );
-        }
-
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
-
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/PutBatchByIdResponseSchema.json"
-                ));
+        ResponseValidator.validateBatchPutResponse(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
         PutBatchResponse batchResponse =
-                response.getBody().as(PutBatchResponse.class);
+                response.as(PutBatchResponse.class);
 
-        int expectedProgramId =
-                (int) scenarioContext.getContext("PROGRAM_ID");
+        int expectedProgramId = (int) scenarioContext.getContext(
+                "PROGRAM_ID"
+        );
 
         Assert.assertEquals(
                 batchResponse.getProgramId(),
@@ -909,28 +820,17 @@ public class ProgramBatchStepDef extends SharedTestData {
     @Then("Admin received success code with updated batchName in response")
     public void admin_received_success_code_with_updated_batch_name_in_response() {
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "response is null. Ensure the PUT When step ran first."
-            );
-        }
-
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
-
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/PutBatchByIdResponseSchema.json"
-                ));
+        ResponseValidator.validateBatchPutResponse(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
         PutBatchResponse batchResponse =
-                response.getBody().as(PutBatchResponse.class);
+                response.as(PutBatchResponse.class);
 
-        String expectedBatchName =
-                (String) scenarioContext.getContext("BATCH_NAME");
+        String expectedBatchName = (String) scenarioContext.getContext(
+                "BATCH_NAME"
+        );
 
         Assert.assertNotNull(
                 expectedBatchName,
@@ -967,28 +867,17 @@ public class ProgramBatchStepDef extends SharedTestData {
     @Then("Admin received success code with updated batchNoOfClasses in response")
     public void admin_received_success_code_with_updated_batch_no_of_classes_in_response() {
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "response is null. Ensure the PUT When step ran first."
-            );
-        }
-
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
-
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/PutBatchByIdResponseSchema.json"
-                ));
+        ResponseValidator.validateBatchPutResponse(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
         PutBatchResponse batchResponse =
-                response.getBody().as(PutBatchResponse.class);
+                response.as(PutBatchResponse.class);
 
-        Object storedClassCount =
-                scenarioContext.getContext("BATCH_NOOFCLASSES");
+        Object storedClassCount = scenarioContext.getContext(
+                "BATCH_NOOFCLASSES"
+        );
 
         if (storedClassCount == null) {
             throw new IllegalStateException(
@@ -998,17 +887,15 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         int expectedBatchNoOfClasses;
 
-        if (storedClassCount instanceof Integer) {
-            expectedBatchNoOfClasses = (Integer) storedClassCount;
-
-        } else if (storedClassCount instanceof Number) {
+        if (storedClassCount instanceof Number) {
             expectedBatchNoOfClasses =
                     ((Number) storedClassCount).intValue();
 
         } else {
             try {
-                expectedBatchNoOfClasses =
-                        Integer.parseInt(storedClassCount.toString());
+                expectedBatchNoOfClasses = Integer.parseInt(
+                        storedClassCount.toString()
+                );
             } catch (NumberFormatException e) {
                 throw new IllegalStateException(
                         "BATCH_NOOFCLASSES is not a valid integer. Actual value: "
@@ -1062,7 +949,6 @@ public class ProgramBatchStepDef extends SharedTestData {
             requestBodyForRequest =
                     BatchRequestUtil.createValidBatchJson(requestBody);
 
-
         } else if (scenario.contains("Missing_Mandatory_Fields")) {
             requestBodyForRequest =
                     BatchRequestUtil.createValidBatchJsonWithOverrides(
@@ -1070,7 +956,6 @@ public class ProgramBatchStepDef extends SharedTestData {
                             null,
                             "Active"
                     );
-
 
         } else if (scenario.contains("Invalid_BatchStatus")) {
             requestBodyForRequest =
@@ -1080,11 +965,9 @@ public class ProgramBatchStepDef extends SharedTestData {
                             "act"
                     );
 
-
         } else if (scenario.contains("Invalid_BatchId")) {
             requestBodyForRequest =
                     BatchRequestUtil.createValidBatchJson(requestBody);
-
 
         } else if (scenario.contains("Invalid_ProgramId")) {
             requestBodyForRequest =
@@ -1102,7 +985,6 @@ public class ProgramBatchStepDef extends SharedTestData {
                             "pithongjagijjjngRe"
                     );
 
-
         } else if (scenario.contains("Invalid_NoOfClasses")
                 || scenario.contains("Invalid_BatchName")
                 || scenario.contains("Invalid_BatchNameLength")
@@ -1110,13 +992,7 @@ public class ProgramBatchStepDef extends SharedTestData {
             requestBodyForRequest = requestBody;
         }
 
-        RequestSpecification requestSpec = given()
-                .spec(noAuth
-                        ? RequestSpec.getRequestSpecWithoutAuth()
-                        : RequestSpec.getRequestSpec())
-                .basePath(endpoint)
-                .body(requestBodyForRequest);
-
+        RequestSpecification requestSpec;
 
         if (endpointNeedsBatchId) {
 
@@ -1128,9 +1004,19 @@ public class ProgramBatchStepDef extends SharedTestData {
                 );
             }
 
-            requestSpec = requestSpec.pathParam(
-                    "batchId",
-                    SharedTestData.batchId
+            requestSpec = RequestBuilder.withBodyAndBatchId(
+                    endpoint,
+                    SharedTestData.batchId,
+                    requestBodyForRequest,
+                    noAuth
+            );
+
+        } else {
+
+            requestSpec = RequestBuilder.withBody(
+                    endpoint,
+                    requestBodyForRequest,
+                    noAuth
             );
         }
 
@@ -1153,20 +1039,16 @@ public class ProgramBatchStepDef extends SharedTestData {
 
         if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException(
-                    "Endpoint is missing in Excel for scenario: " + scenario);
+                    "Endpoint is missing in Excel for scenario: " + scenario
+            );
         }
 
         boolean noAuth = scenario.contains("NoAuth");
         boolean endpointNeedsBatchId = endpoint.contains("{batchId}");
 
-        RequestSpecification requestSpec = given()
-                .spec(noAuth
-                        ? RequestSpec.getRequestSpecWithoutAuth()
-                        : RequestSpec.getRequestSpec())
-                .basePath(endpoint);
+        String batchIdForRequest = null;
 
         if (endpointNeedsBatchId) {
-            String batchIdForRequest;
 
             if (scenario.contains("Invalid_BatchId")) {
                 batchIdForRequest = data.get("InvalidBatchId");
@@ -1174,26 +1056,51 @@ public class ProgramBatchStepDef extends SharedTestData {
                 if (batchIdForRequest == null || batchIdForRequest.isBlank()) {
                     batchIdForRequest = "99999";
                 }
+
             } else {
-                if (SharedTestData.batchId == 0) {
+
+                if (SharedTestData.batchId <= 0) {
                     throw new IllegalStateException(
-                            "batchId is invalid. Create a batch before running this scenario.");
+                            "batchId is invalid. Create a batch before running this scenario."
+                    );
                 }
 
-                batchIdForRequest = String.valueOf(SharedTestData.batchId);
+                batchIdForRequest = String.valueOf(
+                        SharedTestData.batchId
+                );
             }
+        }
 
-            requestSpec = requestSpec.pathParam("batchId", batchIdForRequest);
+        RequestSpecification requestSpec;
+
+        if (endpointNeedsBatchId) {
+            requestSpec = RequestBuilder.withPathParam(
+                    endpoint,
+                    "batchId",
+                    batchIdForRequest,
+                    noAuth
+            );
+        } else {
+            requestSpec = noAuth
+                    ? RequestBuilder.withoutAuth(endpoint)
+                    : RequestBuilder.authorized(endpoint);
         }
 
         scenarioContext.setRequestSpec(requestSpec);
 
-        System.out.println("DELETE BATCH REQUEST");
+        System.out.println("===== DELETE BATCH REQUEST =====");
         System.out.println("Scenario: " + scenario);
         System.out.println("Endpoint: " + endpoint);
         System.out.println("Uses auth: " + !noAuth);
-        System.out.println("Endpoint contains batchId: " + endpointNeedsBatchId);
+        System.out.println("Endpoint contains {batchId}: " + endpointNeedsBatchId);
+
+        if (batchIdForRequest != null) {
+            System.out.println("Batch ID for request: " + batchIdForRequest);
+        }
+
+        System.out.println("================================");
     }
+
     @When("Admin sends DELETE request to delete the batch")
     public void admin_sends_delete_request_to_delete_the_batch() {
         RequestSpecification request =
@@ -1228,53 +1135,49 @@ public class ProgramBatchStepDef extends SharedTestData {
 
     @Then("Admin receives success code with deleted message")
     public void admin_receives_success_code_with_deleted_message() {
-        String expectedMessage = data.get("ExpectedMessage");
 
-        if (expectedMessage == null || expectedMessage.isBlank()) {
-            System.out.println("ExpectedMessage is blank; only status code will be validated.");
-            return;
-        }
-
-        String body = response.asString();
-
-        if (body == null || body.isBlank()) {
-            Assert.fail(
-                    "Expected message: " + expectedMessage + ", but API returned an empty response body."
-            );
-        }
-
-        Assert.assertTrue(
-                body.contains(expectedMessage),
-                "Expected message doesn't match. Expected text: " + expectedMessage + ", actual body: " + body
+        ResponseValidator.validateResponseMessage(
+                response,
+                data.get("ExpectedMessage")
         );
     }
 
     @When("Admin sends GET request to retrieve deleted batch with Id")
-    public void admin_sends_get_request_to_retrieve_deleted_batch_with_id() throws IOException {
-        data = ExcelReader.readExcelData("Batch", "GetBatchById_Deleted_BatchId");
+    public void admin_sends_get_request_to_retrieve_deleted_batch_with_id()
+            throws IOException {
+
+        data = ExcelReader.readExcelData(
+                "Batch",
+                "GetBatchById_Deleted_BatchId"
+        );
 
         String endpoint = data.get("Endpoint");
 
         if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException(
-                    "Endpoint is missing in Excel for scenario: GetBatchById_Deleted_BatchId"
+                    "Endpoint is missing in Excel for scenario: "
+                            + "GetBatchById_Deleted_BatchId"
             );
         }
 
         if (SharedTestData.batchId <= 0) {
             throw new IllegalStateException(
-                    "batchId is 0. Create a batch and capture its batchId before retrieving a deleted batch."
+                    "batchId is invalid. Create a batch and capture its batchId "
+                            + "before retrieving a deleted batch."
             );
         }
 
-        response = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchId", SharedTestData.batchId)
-                .basePath(endpoint)
-                .when()
-                .log()
-                .all()
-                .get();
+        RequestSpecification requestSpec = RequestBuilder.byBatchId(
+                endpoint,
+                SharedTestData.batchId,
+                false
+        );
+
+        scenarioContext.setRequestSpec(requestSpec);
+
+        response = ApiExecutor.get(
+                scenarioContext.getRequestSpec()
+        );
     }
     @Then("Admin receives success code with GET response body for deleted batch")
     public void admin_receives_success_code_with_get_response_body_for_deleted_batch() {
@@ -1291,131 +1194,165 @@ public class ProgramBatchStepDef extends SharedTestData {
     }
 
     @When("Admin sends GET request to retrieve deleted batch with name")
-    public void admin_sends_get_request_to_retrieve_deleted_batch_with_name() throws IOException {
-        data = ExcelReader.readExcelData("Batch", "GetBatchByName_Deleted_BatchId");
+    public void admin_sends_get_request_to_retrieve_deleted_batch_with_name()
+            throws IOException {
+
+        data = ExcelReader.readExcelData(
+                "Batch",
+                "GetBatchByName_Deleted_BatchId"
+        );
 
         String endpoint = data.get("Endpoint");
 
         if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException(
-                    "Endpoint is missing in Excel for scenario: GetBatchByName_Deleted_BatchId"
+                    "Endpoint is missing in Excel for scenario: "
+                            + "GetBatchByName_Deleted_BatchId"
             );
         }
 
-        if (SharedTestData.batchName == null || SharedTestData.batchName.isBlank()) {
+        if (SharedTestData.batchName == null
+                || SharedTestData.batchName.isBlank()) {
             throw new IllegalStateException(
-                    "batchName is null or blank. Create a batch and capture its batchName before this step."
+                    "batchName is null or blank. Create a batch and capture its "
+                            + "batchName before this step."
             );
         }
 
-        response = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchName", SharedTestData.batchName)
-                .basePath(endpoint)
-                .when()
-                .log()
-                .all()
-                .get();
+        RequestSpecification requestSpec = RequestBuilder.byBatchName(
+                endpoint,
+                SharedTestData.batchName,
+                false
+        );
+
+        scenarioContext.setRequestSpec(requestSpec);
+
+        response = ApiExecutor.get(
+                scenarioContext.getRequestSpec()
+        );
     }
 
     @Then("Admin receives success code with GET response body for deleted batch by name")
     public void admin_receives_success_code_with_get_response_body_for_deleted_batch_by_name() {
-        int expectedStatusCode = Integer.parseInt(data.get("ExpectedStatusCode"));
 
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode);
+        ResponseValidator.validateStatus(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
         JsonPath json = response.jsonPath();
 
         List<Map<String, Object>> batches = json.getList("$");
 
+        Assert.assertNotNull(
+                batches,
+                "Expected a Batch list in the response, but it was null."
+        );
+
         Assert.assertFalse(
                 batches.isEmpty(),
-                "Expected at least one batch in the response, but list is empty."
+                "Expected at least one batch in the response, but the list is empty."
         );
 
         Map<String, Object> batch = batches.get(0);
 
+        Assert.assertNotNull(
+                batch,
+                "The first Batch object in the response is null."
+        );
+
         Assert.assertEquals(
                 ((Number) batch.get("batchId")).intValue(),
                 SharedTestData.batchId,
-                "Batch Id doesn't match"
+                "Batch ID does not match"
         );
 
         Assert.assertEquals(
                 (String) batch.get("batchName"),
                 SharedTestData.batchName,
-                "Batch Name doesn't match"
+                "Batch name does not match"
         );
 
         Assert.assertEquals(
                 (String) batch.get("batchStatus"),
                 "Inactive",
-                "Batch Status should be Inactive"
+                "Deleted Batch status should be Inactive"
         );
     }
-
     @When("Admin sends PUT request to update deleted batch status")
-    public void admin_sends_put_request_to_update_deleted_batch_status() throws IOException {
-        data = ExcelReader.readExcelData("Batch", "PutBatchById_Deleted_BatchId");
+    public void admin_sends_put_request_to_update_deleted_batch_status()
+            throws IOException {
+
+        data = ExcelReader.readExcelData(
+                "Batch",
+                "PutBatchById_Deleted_BatchId"
+        );
 
         String endpoint = data.get("Endpoint");
 
         if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException(
-                    "Endpoint is missing in Excel for scenario: PutBatchById_Deleted_BatchId"
+                    "Endpoint is missing in Excel for scenario: "
+                            + "PutBatchById_Deleted_BatchId"
             );
         }
 
         if (SharedTestData.batchId <= 0) {
             throw new IllegalStateException(
-                    "batchId is 0. Create a batch and capture its batchId before this step."
+                    "batchId is invalid. Create a batch and capture its batchId "
+                            + "before this step."
             );
         }
 
         if (SharedTestData.programId <= 0) {
             throw new IllegalStateException(
-                    "programId is 0. Create a program and capture its programId before this step."
+                    "programId is invalid. Create a program and capture its programId "
+                            + "before this step."
             );
         }
 
-        if (SharedTestData.programName == null || SharedTestData.programName.isBlank()) {
+        if (SharedTestData.programName == null
+                || SharedTestData.programName.isBlank()) {
             throw new IllegalStateException(
-                    "programName is null or blank. Create a program and capture its programName before this step."
+                    "programName is null or blank. Create a program and capture its "
+                            + "programName before this step."
             );
         }
 
         ObjectMapper mapper = new ObjectMapper();
-        PutBatchRequest batchData = mapper.readValue(data.get("Body"), PutBatchRequest.class);
 
-        // Use the current batch name from SharedTestData
+        PutBatchRequest batchData = mapper.readValue(
+                data.get("Body"),
+                PutBatchRequest.class
+        );
+
         batchData.setBatchName(SharedTestData.batchName);
         batchData.setProgramId(SharedTestData.programId);
         batchData.setProgramName(SharedTestData.programName);
 
-        response = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchId", SharedTestData.batchId)
-                .basePath(endpoint)
-                .body(batchData)
-                .when()
-                .log()
-                .all()
-                .put();
+        RequestSpecification requestSpec = RequestBuilder.putByBatchId(
+                endpoint,
+                SharedTestData.batchId,
+                batchData,
+                false
+        );
+
+        scenarioContext.setRequestSpec(requestSpec);
+
+        response = ApiExecutor.put(
+                scenarioContext.getRequestSpec()
+        );
     }
     @Then("Admin receives success code with Active batch status in the response body")
     public void admin_receives_success_code_with_active_batch_status_in_the_response_body() {
-        int expectedStatusCode = Integer.parseInt(data.get("ExpectedStatusCode"));
 
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath("schemas/batch/PutBatchByIdResponseSchema.json"));
+        ResponseValidator.validateBatchPutResponse(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
-        PutBatchResponse batchResponse = response.getBody().as(PutBatchResponse.class);
+        PutBatchResponse batchResponse =
+                response.as(PutBatchResponse.class);
 
         Assert.assertEquals(
                 batchResponse.getBatchStatus(),
