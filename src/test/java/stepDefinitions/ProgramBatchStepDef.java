@@ -25,12 +25,7 @@ import pojo.CreateBatchResponse;
 import pojo.PutBatchRequest;
 import pojo.PutBatchResponse;
 import specBuilder.RequestSpec;
-import utils.ExcelReader;
-import utils.ProgramResponseValidator;
-import utils.ScenarioContext;
-import utils.SharedTestData;
-import utils.TestDataUtil;
-import utils.BatchRequestUtil;
+import utils.*;
 
 public class ProgramBatchStepDef extends SharedTestData {
 
@@ -233,7 +228,7 @@ public class ProgramBatchStepDef extends SharedTestData {
         }
 
         String actualMessage =
-                ProgramResponseValidator.extractErrorMessage(response);
+                ResponseValidator.extractErrorMessage(response);
 
         System.out.println("Expected message: " + expectedMessage);
         System.out.println("Actual message: " + actualMessage);
@@ -951,39 +946,21 @@ public class ProgramBatchStepDef extends SharedTestData {
 
     @Then("Admin received success code with updated batchStatus in response")
     public void admin_received_success_code_with_updated_batch_status_in_response() {
-
-        if (response == null) {
-            throw new IllegalStateException(
-                    "response is null. Ensure the PUT When step ran first."
-            );
-        }
-
-        int expectedStatusCode =
-                Integer.parseInt(data.get("ExpectedStatusCode"));
-
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/batch/PutBatchByIdResponseSchema.json"
-                ));
+        ResponseValidator.validateBatchPutResponse(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
         PutBatchResponse batchResponse =
-                response.getBody().as(PutBatchResponse.class);
+                response.as(PutBatchResponse.class);
 
-        String expectedBatchStatus =
+        String expectedStatus =
                 (String) scenarioContext.getContext("BATCH_STATUS");
-
-        Assert.assertNotNull(
-                expectedBatchStatus,
-                "Expected batchStatus is missing from ScenarioContext."
-        );
 
         Assert.assertEquals(
                 batchResponse.getBatchStatus(),
-                expectedBatchStatus,
-                "Updated batchStatus in response should match the batchStatus sent in the PUT payload."
+                expectedStatus,
+                "Updated batchStatus does not match"
         );
     }
 
@@ -1219,57 +1196,34 @@ public class ProgramBatchStepDef extends SharedTestData {
     }
     @When("Admin sends DELETE request to delete the batch")
     public void admin_sends_delete_request_to_delete_the_batch() {
-        RequestSpecification requestSpec = scenarioContext.getRequestSpec();
+        RequestSpecification request =
+                scenarioContext.getRequestSpec();
 
-        if (requestSpec == null) {
+        if (request == null) {
             throw new IllegalStateException(
-                    "requestSpec is null. Ensure the DELETE Given step ran before this When step."
+                    "DELETE request was not prepared"
             );
         }
 
-        response = requestSpec
-                .when()
-                .log()
-                .all()
-                .delete();
+        response = ApiExecutor.delete(request);
     }
 
     @Given("Admin create DELETE request with valid batchId")
-    public void admin_create_delete_request_with_valid_batch_id() throws IOException {
-        if (SharedTestData.batchId <= 0) {
-            throw new IllegalStateException(
-                    "batchId is 0. Create a batch and capture its batchId before DELETE by batchId."
-            );
-        }
+    public void admin_create_delete_request_with_valid_batch_id()
+            throws IOException {
 
-        data = ExcelReader.readExcelData("Batch", "DeleteBatchById_Valid_BatchId");
+        data = ExcelReader.readExcelData(
+                "Batch",
+                "DeleteBatchById_Valid_BatchId"
+        );
 
-        String endpoint = data.get("Endpoint");
+        RequestSpecification request = RequestBuilder.byBatchId(
+                data.get("Endpoint"),
+                SharedTestData.batchId,
+                false
+        );
 
-        if (endpoint == null || endpoint.isBlank()) {
-            throw new IllegalStateException(
-                    "Endpoint is missing in Excel for scenario: DeleteBatchById_Valid_BatchId"
-            );
-        }
-
-        if (!endpoint.contains("{batchId}")) {
-            throw new IllegalStateException(
-                    "The valid DELETE-by-batchId Excel endpoint must contain {batchId}. Actual endpoint: "
-                            + endpoint
-            );
-        }
-
-        RequestSpecification requestSpec = given()
-                .spec(RequestSpec.getRequestSpec())
-                .pathParam("batchId", SharedTestData.batchId)
-                .basePath(endpoint);
-
-        scenarioContext.setRequestSpec(requestSpec);
-
-        System.out.println("===== DELETE BATCH BY VALID ID REQUEST =====");
-        System.out.println("batchId: " + SharedTestData.batchId);
-        System.out.println("Endpoint: " + endpoint);
-        System.out.println("============================================");
+        scenarioContext.setRequestSpec(request);
     }
 
     @Then("Admin receives success code with deleted message")
@@ -1324,31 +1278,15 @@ public class ProgramBatchStepDef extends SharedTestData {
     }
     @Then("Admin receives success code with GET response body for deleted batch")
     public void admin_receives_success_code_with_get_response_body_for_deleted_batch() {
-        int expectedStatusCode = Integer.parseInt(data.get("ExpectedStatusCode"));
+        ResponseValidator.validateStatus(
+                response,
+                data.get("ExpectedStatusCode")
+        );
 
-        response.then()
-                .log()
-                .all()
-                .statusCode(expectedStatusCode);
-
-        JsonPath json = response.jsonPath();
-
-        Assert.assertEquals(
-                json.getInt("batchId"),
+        BatchResponseValidator.validateInactiveBatch(
+                response.jsonPath(),
                 SharedTestData.batchId,
-                "Batch Id doesn't match"
-        );
-
-        Assert.assertEquals(
-                json.getString("batchName"),
-                SharedTestData.batchName,
-                "Batch Name doesn't match"
-        );
-
-        Assert.assertEquals(
-                json.getString("batchStatus"),
-                "Inactive",
-                "Batch Status should be Inactive"
+                SharedTestData.batchName
         );
     }
 
