@@ -26,12 +26,7 @@ public class UserStepDef {
         this.scenarioContext = scenarioContext;
     }
 
-    @Given("Admin sets Bearer token")
-    public void admin_sets_bearer_token() {
-       // SharedTestData.generateAndSetToken();
 
-        scenarioContext.setRequestSpec(RequestSpec.getRequestSpec());
-    }
  // Create user
     @Given("Admin creates POST Request for the LMS API endpoint with data from Excel {string}")
     public void admin_creates_post_request_for_the_lms_api_endpoint_with_data_from_excel(String scenarioName) throws IOException {

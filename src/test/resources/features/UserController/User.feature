@@ -1,7 +1,7 @@
 Feature: LMS  User Module
 
   Background:
-    Given Admin sets Bearer token
+    Given Admin sets authorization to Bearer Token
 
   @createuser
   Scenario Outline: Check if admin is able to create user with valid/invalid details
