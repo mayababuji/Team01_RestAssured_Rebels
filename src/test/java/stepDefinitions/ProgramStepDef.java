@@ -1,6 +1,6 @@
     package stepDefinitions;
     
-    import httpRequest.ProgramRequestParser;
+
     import io.cucumber.java.en.Then;
     import io.cucumber.java.en.When;
     import io.restassured.response.Response;
@@ -13,6 +13,7 @@
     import utils.ScenarioContext;
     import utils.SharedTestData;
     import utils.TestDataUtil;
+    import specBuilder.RequestSpec;
     
     import java.io.IOException;
     import java.util.Map;
@@ -74,16 +75,25 @@
     
             int expectedStatus = Integer.parseInt(data.get("ExpectedStatusCode").trim());
     
+
             // Parse Request Body
             String body = data.get("Body");
-    
+
             if (body == null || body.trim().isEmpty()) {
-    
+
                 programInput = null;
-    
+
             } else {
-    
-                programInput = ProgramRequestParser.createProgramParseData(body);
+
+                try {
+                    programInput = RequestSpec.parseBody(body, CreateProgramRequest.class);
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                    throw new IllegalStateException(
+                            "Failed to parse Program request body for scenario: "
+                                    + scenarioNameFeature,
+                            e
+                    );
+                }
             }
     
     // ----------------------------------------------------------------------------------------------

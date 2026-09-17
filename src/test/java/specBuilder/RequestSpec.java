@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import configReader.ConfigReader;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
@@ -13,15 +15,11 @@ import utils.SharedTestData;
 
 public class RequestSpec {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static PrintStream logStream;
 
     public static RequestSpecification getRequestSpec() {
         initializeLogStream();
-
-//        if (SharedTestData.token == null
-//                || SharedTestData.token.isBlank()) {
-//            SharedTestData.generateAndSetToken();
-//        }
 
         if (SharedTestData.token == null
                 || SharedTestData.token.isBlank()) {
@@ -143,5 +141,15 @@ public class RequestSpec {
 
     public static String getBaseUri() {
         return ConfigReader.get("base.url");
+    }
+
+    /**
+     * Parse a JSON request/response body into a POJO.
+     * Reuses the same ObjectMapper instance used by Rest Assured.
+     */
+    public static <T> T parseBody(String body, Class<T> clazz)
+            throws JsonProcessingException {
+
+        return OBJECT_MAPPER.readValue(body, clazz);
     }
 }
