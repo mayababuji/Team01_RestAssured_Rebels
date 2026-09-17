@@ -34,7 +34,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'target/ExtentReports/**, target/cucumber-reports/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'target/ExtentReports*/**, target/cucumber-reports/**', allowEmptyArchive: true
 
             allure includeProperties: false, jdk: '', results: [[path: 'target/allure-results']]
         }
