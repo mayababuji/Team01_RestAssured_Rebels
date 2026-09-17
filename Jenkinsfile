@@ -20,10 +20,11 @@ pipeline {
                         variable: 'LMS_ADMIN_PASSWORD'
                     )
                 ]) {
-                    bat '''
-                        mvn clean test ^
-                        -Dadmin.email="%LMS_ADMIN_EMAIL%" ^
-                        -Dadmin.password="%LMS_ADMIN_PASSWORD%"
+                    sh '''
+                        mvn clean test \
+                          -Denv=UAT \
+                          -Dadmin.email="$LMS_ADMIN_EMAIL" \
+                          -Dadmin.password="$LMS_ADMIN_PASSWORD"
                     '''
                 }
             }
