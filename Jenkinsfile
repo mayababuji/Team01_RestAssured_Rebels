@@ -1,13 +1,11 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    tools {
+        maven 'mvn_home'
+    }
 
+    stages {
         stage('Run API Tests') {
             steps {
                 withCredentials([
@@ -21,6 +19,9 @@ pipeline {
                     )
                 ]) {
                     sh '''
+                        java -version
+                        mvn -version
+
                         mvn clean test \
                           -Denv=UAT \
                           -Dadmin.email="$LMS_ADMIN_EMAIL" \
