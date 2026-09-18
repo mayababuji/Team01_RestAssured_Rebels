@@ -9,7 +9,7 @@
       "type": "string"
     },
     "programDescription": {
-      "type": "string"
+      "type": ["string", "null"]
     },
     "programStatus": {
       "type": "string"
