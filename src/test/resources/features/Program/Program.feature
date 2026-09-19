@@ -48,10 +48,10 @@ Feature: Validate Program Module
       | Create Program with Program Name larger than desired length        |
       | Create Program without Program Name                                |
 
-
-  # ============================================================
-  # GET PROGRAM
-  # ============================================================
+#
+#  # ============================================================
+#  # GET PROGRAM
+#  # ============================================================
 @GetProgram
 Scenario Outline: Admin GET Program by "<operation>" with "<scenarioName>"
     Given Admin creates GET request with "<scenarioName>" for Program
@@ -68,11 +68,11 @@ Examples:
     | Program by ID    | invalid endpoint  |
     | Program by ID    | invalid method    |
 
-
-  # ============================================================
-  # GET PROGRAM - NO AUTH
-  # ============================================================
-
+#
+#  # ============================================================
+#  # GET PROGRAM - NO AUTH
+#  # ============================================================
+#
   @NoAuth
 Scenario Outline: Unauthorized access validation for "<scenarioName>"
     Given Admin creates GET request with "<scenarioName>" for Program
@@ -84,10 +84,10 @@ Examples:
     | Get all Programs NoAuth  |
     | Get Program by ID NoAuth |
 
-
-  # ============================================================
-  # PUT PROGRAM
-  # ============================================================
+#
+#  # ============================================================
+#  # PUT PROGRAM
+#  # ============================================================
 
 @UpdateProgram
 Scenario Outline: Admin updates Program by "<operation>" with "<scenarioName>"
@@ -110,10 +110,10 @@ Examples:
     | Program by Name | Update invalid status in request body   |
     | Program by Name | Updates spcl char in program description |
 
-
-  # ============================================================
-  # PUT PROGRAM - NO AUTH
-  # ============================================================
+#
+#   ============================================================
+#   PUT PROGRAM - NO AUTH
+#   ============================================================
 @NoAuth
 Scenario Outline: Unauthorized access validation for "<scenarioName>"
     Given Admin creates PUT request with "<scenarioName>" for Program

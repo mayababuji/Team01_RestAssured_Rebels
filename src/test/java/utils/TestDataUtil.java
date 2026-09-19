@@ -66,7 +66,7 @@ public final class TestDataUtil {
         );
 
         StringBuilder programName = new StringBuilder(
-                "Program"
+                "Prog"
         );
 
         for (char digit : timestamp.toCharArray()) {
