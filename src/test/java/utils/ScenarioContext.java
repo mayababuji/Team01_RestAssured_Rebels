@@ -1,5 +1,6 @@
 package utils;
 
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 import java.util.HashMap;
@@ -7,30 +8,41 @@ import java.util.Map;
 
 public class ScenarioContext {
 
-    private final Map<String, Object> scenarioData = new HashMap<>();
-    private static final String KEY_REQUEST_SPEC = "requestSpec";
+    private RequestSpecification requestSpec;
+    private Response response;
+    private Map<String, String> excelData;
 
-    public void setContext(String key, Object value) {
-        scenarioData.put(key, value);
-    }
-
-    public Object getContext(String key) {
-        return scenarioData.get(key);
-    }
+    private final Map<String, Object> contextData = new HashMap<>();
 
     public void setRequestSpec(RequestSpecification requestSpec) {
-        scenarioData.put(KEY_REQUEST_SPEC, requestSpec);
+        this.requestSpec = requestSpec;
     }
 
     public RequestSpecification getRequestSpec() {
-        return (RequestSpecification) scenarioData.get(KEY_REQUEST_SPEC);
+        return requestSpec;
     }
 
-    public boolean contains(String key) {
-        return scenarioData.containsKey(key);
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
-    public void clear() {
-        scenarioData.clear();
+    public Response getResponse() {
+        return response;
+    }
+
+    public void setExcelData(Map<String, String> excelData) {
+        this.excelData = excelData;
+    }
+
+    public Map<String, String> getExcelData() {
+        return excelData;
+    }
+
+    public void setContext(String key, Object value) {
+        contextData.put(key, value);
+    }
+
+    public Object getContext(String key) {
+        return contextData.get(key);
     }
 }

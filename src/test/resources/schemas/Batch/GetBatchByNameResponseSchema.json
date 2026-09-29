@@ -1,36 +1,40 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "object",
-  "properties": {
-    "batchId": {
-      "type": "integer"
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "batchId": {
+        "type": "integer"
+      },
+      "batchName": {
+        "type": "string"
+      },
+      "batchDescription": {
+        "type": "string"
+      },
+      "batchStatus": {
+        "type": "string"
+      },
+      "batchNoOfClasses": {
+        "type": "integer"
+      },
+      "programId": {
+        "type": "integer"
+      },
+      "programName": {
+        "type": "string"
+      }
     },
-    "batchName": {
-      "type": "string"
-    },
-    "batchDescription": {
-      "type": "string"
-    },
-    "batchStatus": {
-      "type": "string"
-    },
-    "batchNoOfClasses": {
-      "type": "integer"
-    },
-    "programId": {
-      "type": "integer"
-    },
-    "programName": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "batchId",
-    "batchName",
-    "batchDescription",
-    "batchStatus",
-    "batchNoOfClasses",
-    "programId",
-    "programName"
-  ]
+    "required": [
+      "batchId",
+      "batchName",
+      "batchDescription",
+      "batchStatus",
+      "batchNoOfClasses",
+      "programId",
+      "programName"
+    ]
+  }
 }

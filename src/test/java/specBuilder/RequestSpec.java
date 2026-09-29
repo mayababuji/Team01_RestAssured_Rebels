@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import configReader.ConfigReader;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
@@ -13,15 +15,11 @@ import utils.SharedTestData;
 
 public class RequestSpec {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static PrintStream logStream;
 
     public static RequestSpecification getRequestSpec() {
         initializeLogStream();
-
-        if (SharedTestData.token == null
-                || SharedTestData.token.isBlank()) {
-            SharedTestData.generateAndSetToken();
-        }
 
         if (SharedTestData.token == null
                 || SharedTestData.token.isBlank()) {
@@ -67,19 +65,20 @@ public class RequestSpec {
     }
 
     public static RequestSpecification getSpecForScenario(String scenarioName) {
-        if (scenarioName.contains("No_Auth")
-                || scenarioName.contains("NoAuth")) {
+        String scenario = scenarioName == null ? "" : scenarioName;
 
+        if (scenario.contains("No_Auth")
+                || scenario.contains("NoAuth")) {
             return getRequestSpecWithoutAuth();
+        }
 
-        } else if (scenarioName.contains("Invalid_Token")
-                || scenarioName.contains("InvalidToken")) {
-
+        if (scenario.contains("Invalid_Token")
+                || scenario.contains("InvalidToken")) {
             return getRequestSpecWithCustomToken("invalid_token_12345");
+        }
 
-        } else if (scenarioName.contains("Invalid_Auth")
-                || scenarioName.contains("Missing_Bearer")) {
-
+        if (scenario.contains("Invalid_Auth")
+                || scenario.contains("Missing_Bearer")) {
             return getRequestSpecInvalidAuth();
         }
 
@@ -142,5 +141,15 @@ public class RequestSpec {
 
     public static String getBaseUri() {
         return ConfigReader.get("base.url");
+    }
+
+    /**
+     * Parse a JSON request/response body into a POJO.
+     * Reuses the same ObjectMapper instance used by Rest Assured.
+     */
+    public static <T> T parseBody(String body, Class<T> clazz)
+            throws JsonProcessingException {
+
+        return OBJECT_MAPPER.readValue(body, clazz);
     }
 }
