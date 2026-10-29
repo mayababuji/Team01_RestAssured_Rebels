@@ -68,8 +68,54 @@ public class TokenGenerator {
             throw new IllegalStateException(
                     "Token field missing or blank in login response."
             );
+       }
+
+       return token;
+   }
+    /**
+     * Gets a reset token via the Forgot Password (confirm email) endpoint.
+     * Requires ONLY the email - no password - so it works for a freshly
+     * created admin whose password is not yet known.
+     */
+    public static String generateForgotPasswordResetToken(String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("email must not be null or blank");
+        }
+
+        String forgotPath = ConfigReader.get("login.forgotPassword.endpoint");
+        if (forgotPath == null || forgotPath.isBlank()) {
+            throw new IllegalStateException("login.forgotPassword.endpoint not configured in config.");
+        }
+
+        String escapedEmail = email.replace("\\", "\\\\").replace("\"", "\\\"");
+
+        Response response = given()
+                .baseUri(ConfigReader.get("base.url"))
+                .contentType("application/json")
+                .accept("*/*")
+                .body("{\"userLoginEmailId\":\"" + escapedEmail + "\"}")
+                .when()
+                .post(forgotPath);
+
+        if (response.getStatusCode() != 200) {
+            throw new IllegalStateException(
+                    "Forgot password failed. Status: "
+                            + response.getStatusCode()
+                            + ", Body: "
+                            + response.getBody().asString()
+            );
+        }
+
+        String token = response.jsonPath().getString("token");
+
+        if (token == null || token.isBlank()) {
+            throw new IllegalStateException("Token field missing or blank in forgot password response.");
         }
 
         return token;
     }
+
+
+
 }
